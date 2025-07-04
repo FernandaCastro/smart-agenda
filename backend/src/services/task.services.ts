@@ -1,0 +1,131 @@
+import { Task, TaskResponse } from '../models/task.models';
+import { INTENTIONS } from '../models/constants'
+import { analyseText, lookupDescription } from './openai.services';
+
+let tasks: Task[] = [
+  {
+    id: 1,
+    description: "Dentista para Letícia",
+    date: "11/07/2025",
+    time: "16:00",
+    assignee: "Letícia",
+    status: "pending"
+  },
+  {
+    id: 2,
+    description: "Resolver bug no trabalho",
+    date: "5/07/2025",
+    time: "9:00",
+    assignee: "Trabalho",
+    status: "resolved"
+  },
+  {
+    id: 3,
+    description: "Molhar as plantas",
+    date: "8/07/2025",
+    time: "16:00",
+    assignee: "Fernanda",
+    status: "pending"
+  }
+]
+
+//Do not consider description
+function preFilter(task: Task) {
+  const criteria = {
+    id: task.id,
+    description: '',
+    date: task.date,
+    time: task.time,
+    assignee: task.assignee,
+    status: task.status
+  }
+  return filter(criteria);
+}
+
+function filter(criteria: Task): Task[] {
+  if (!criteria) return tasks;
+
+  const _tasks = tasks.filter(t => {
+    if (criteria.id > 0 && t.id !== criteria.id) return false;
+    if (criteria.description && t.description !== criteria.description) return false;
+    if (criteria.assignee && t.assignee !== criteria.assignee) return false;
+    if (criteria.status && t.status !== criteria.status) return false;
+    if (criteria.date && t.date !== criteria.date) return false;
+    if (criteria.time && t.time !== criteria.time) return false;
+    return true;
+  });
+
+  return _tasks;
+}
+
+function create(task: Task): Task {
+  task.id = tasks.length + 1;
+  tasks.push(task);
+  return task;
+}
+
+function update(id: number, task: Partial<Task>): Task {
+
+  if (!id) throw new Error("update: Id cannot be null");
+
+  const index = tasks.findIndex(t => t.id === id);
+  if (index >= 0) {
+    tasks[index] = { ...tasks[index], ...task };
+    return tasks[index];
+  }
+  throw new Error("update: Task not found");
+}
+
+export async function process(text: string) {
+
+  const aiTaskResponse = await analyseText(text);
+
+  if (aiTaskResponse.intention === INTENTIONS.CREATE) {
+    const task = create(aiTaskResponse.task);
+    const taskResponse = new TaskResponse(INTENTIONS.CREATE, [task]);
+    return taskResponse;
+  }
+
+  //Pre-Filter : do not consider description
+  const filteredTasks = preFilter(aiTaskResponse.task);
+  if (!filteredTasks || filteredTasks.length === 0) {
+    throw new Error("process: No task with this criteria found");
+  }
+
+  let descriptionFound = '';
+  if (aiTaskResponse.task.description) {
+    const descriptions = filteredTasks.flatMap((task) => task.description);
+    const aiLookupResponse = await lookupDescription(aiTaskResponse.task.description, descriptions);
+    
+    if (!aiLookupResponse) throw new Error("process: No task with this description found");
+    
+    descriptionFound = aiLookupResponse.description;
+  }
+
+  if (aiTaskResponse.intention === INTENTIONS.UPDATE) {
+
+    const taskFound = filteredTasks.find((item) => item.description === descriptionFound);
+    if (!taskFound) {
+      throw new Error("process: No task with this criteria found");
+    }
+
+    const task = update(taskFound.id, aiTaskResponse.task);
+    const taskResponse = new TaskResponse(INTENTIONS.UPDATE, [task]);
+    return taskResponse;
+  }
+
+  if (aiTaskResponse.intention === INTENTIONS.RETRIEVE) {
+
+    if (aiTaskResponse.task.description) {
+      aiTaskResponse.task.description = descriptionFound;
+    }
+
+    //Filter: consider description
+    const _tasks = filter(aiTaskResponse.task);
+    const taskResponse = new TaskResponse(INTENTIONS.RETRIEVE, _tasks);
+    return taskResponse;
+  }
+
+
+  throw new Error("process: Analysis failed");
+}

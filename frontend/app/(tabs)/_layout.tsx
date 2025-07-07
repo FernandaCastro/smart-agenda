@@ -17,6 +17,14 @@ export default function TabLayout() {
                 },
             }}>
             <Tabs.Screen
+                name="mainScreen"
+                options={{
+                    title: 'Chat Message',
+                    tabBarIcon: ({ color, focused }) => (
+                        <Ionicons name={focused ? 'chatbubble-sharp' : 'chatbubble-outline'} color={color} size={24} />
+                    )
+                }} />
+            <Tabs.Screen
                 name="index"
                 options={{
                     title: 'Home',
@@ -24,7 +32,7 @@ export default function TabLayout() {
                         <Ionicons name={focused ? 'home-sharp' : 'home-outline'} color={color} size={24} />
                     )
                 }} />
-                            <Tabs.Screen
+            <Tabs.Screen
                 name="result"
                 options={{
                     title: 'Results',

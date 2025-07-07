@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { process } from '../services/task.services';
+import { AppError } from '../models/error.models';
 
 // export const listTasks = (_req: Request, res: Response) => {
 //   const tasks = list();
@@ -20,16 +21,22 @@ import { process } from '../services/task.services';
 
 export const analyse = async (req: Request, res: Response) => {
 
-  if (!req.body || !req.body.text) {
-    return res.status(400).json({ erro: 'Text is not present.' });
-  }
-
   try {
+
+    if (!req.body || !req.body.text) throw new AppError(400, 'Text is not present.');
+
     const task = await process(req.body.text);
     return res.json(task);
 
   } catch (error) {
     console.error('Error analysing text:', error);
-    res.status(500).json({ erro: 'Error analysing the Text' });
+
+    if (error instanceof AppError) {
+      const appError = (error as AppError);
+      res.statusMessage = appError.message;
+      return res.status(appError.statusCode).json(appError);
+    }
+
+    return res.status(500).json(error);
   }
 };

@@ -13,6 +13,7 @@ export async function analyseText(text: string) {
   Retorne um JSON com os seguintes campos:
 
   - intention: "create", "update" (para "resolved" ou "cancelled"), "delete"(para remover uma tarefa) ou "retrieve" (para consultar tarefas)
+  - id: número inteiro que identifica a tarefa, se não informado.
   - description: o que deve ou foi feito (verbo no infinitivo, se aplicável) ou null em caso de consulta genérica
   - date: no formato DD-MM-AAAA, ou null se não especificado
   - time: no formato HH:MM, ou null se não especificado
@@ -25,7 +26,7 @@ export async function analyseText(text: string) {
 
   1. **intention**:
    - Se a frase indicar que algo deve ser feito → "create"
-   - Se indicar que algo foi feito ou cancelado → "update"
+   - Se indicar que algo foi feito, cancelado, ou a tarefa deve ser alterada → "update"
    - Se for uma pergunta ou consulta sobre tarefas → "retrieve"
 
    2. **status**:
@@ -34,11 +35,15 @@ export async function analyseText(text: string) {
    - Se foi cancelada → "cancelled"
    - Se for uma consulta e o status não foi mencionado → null
 
-   3. **description**:
-   - Use o verbo no infinitivo (ex: "ir ao médico", "resolver bug") se aplicável
-   - Em caso de consulta, se não houver uma ação clara, use null, caso contrário infira a possível descrição
+   3. **id**:
+   - Considere que a expressão "tarefa 3", "tarefa número 3" ou "a terceira tarefa" representa o campo "id": 3. Sempre que encontrar esse padrão, extraia o número como valor de id
 
-   4. **Campos ausentes ou não mencionados** devem ser preenchidos com null.
+   4. **description**:
+   - Use o verbo no infinitivo e com a primeira letra maiúscula(ex: "Ir ao médico", "Resolver bug") se aplicável
+   - Em caso de consulta, se não houver uma ação clara, use null, caso contrário infira a possível descrição
+   - Em caso de update, se o id da tarefa foi identificado, use null, caso contrário infira a possível descrição
+
+   5. **Campos ausentes ou não mencionados** devem ser preenchidos com null.
 
   Hoje é "${today}.
   Frase: "${text}"
@@ -67,10 +72,11 @@ export async function analyseText(text: string) {
   try {
 
     const json = JSON.parse(content);
+    console.log(json);
     return new AITaskResponse(
       json.intention,
       {
-        id: 0,
+        id: json.id,
         description: json.description,
         assignee: json.assignee,
         date: json.date,

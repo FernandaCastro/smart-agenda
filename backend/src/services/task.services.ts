@@ -1,6 +1,8 @@
 import { Task, TaskResponse } from '../models/task.models';
 import { INTENTIONS, STATUS } from '../models/constants'
 import { analyseText, lookupDescription } from './openai.services';
+import dayjs from 'dayjs';
+import { AppError } from '../models/error.models';
 
 let tasks: Task[] = [
   {
@@ -76,6 +78,7 @@ function create(task: Task): TaskResponse {
   }
 
   task.id = tasks.length + 1;
+  task.date = !task.date ? dayjs().format('DD-MM-YYYY') : task.date;
   tasks.push(task);
 
   const taskResponse = new TaskResponse(INTENTIONS.CREATE, [task]);
@@ -84,12 +87,23 @@ function create(task: Task): TaskResponse {
 
 function update(id: number, task: Task): TaskResponse {
 
-  if (!id) throw new Error("update: Id cannot be null");
+  if (!id) throw new AppError(400, "Id cannot be null");
 
   const index = tasks.findIndex(t => t.id === id);
-  if (index < 0) throw new Error("update: Task not found");
+  if (index < 0) throw new AppError(404, "Task not found");
 
-  tasks[index] = { ...tasks[index], ...task };
+  const originalTask = tasks[index];
+
+  const changeTask = {
+    id: task.id,
+    description: !task.description ? originalTask.description : task.description,
+    date: !task.date ? originalTask.date : task.date,
+    time: !task.time ? originalTask.time : task.time,
+    assignee: !task.assignee ? originalTask.assignee : task.assignee,
+    status: !task.status ? originalTask.status : task.status
+  }
+
+  tasks[index] = { ...tasks[index], ...changeTask };
 
   const taskResponse = new TaskResponse(INTENTIONS.UPDATE, [tasks[index]]);
   return taskResponse;
@@ -104,26 +118,53 @@ export async function process(text: string) {
   }
 
   //Pre-Filter : do not consider description
-  const filteredTasks = preFilter(aiTaskResponse.task);
-  if (!filteredTasks || filteredTasks.length === 0) {
-    throw new Error("process: No task with this criteria found");
+  // const filteredTasks = preFilter(aiTaskResponse.task);
+  // if (!filteredTasks || filteredTasks.length === 0) {
+  //   throw new AppError(404, "No task with this criteria found");
+  // }
+
+  // let descriptionFound = '';
+  // if (aiTaskResponse.task.description) {
+  //   const descriptions = filteredTasks.flatMap((task) => task.description);
+  //   const aiLookupResponse = await lookupDescription(aiTaskResponse.task.description, descriptions);
+
+  //   if (!aiLookupResponse) throw new AppError(404, "No task with this description found");
+
+  //   descriptionFound = aiLookupResponse.description;
+  // }
+
+  let filteredTasks = tasks;
+  if (aiTaskResponse.task.id) {
+    const criteria = {
+      id: aiTaskResponse.task.id,
+      description: '',
+      date: null,
+      time: null,
+      assignee: null,
+      status: null
+    }
+    filteredTasks = filter(criteria);
   }
 
   let descriptionFound = '';
-  if (aiTaskResponse.task.description) {
+  if (!aiTaskResponse.task.id && aiTaskResponse.task.description) {
     const descriptions = filteredTasks.flatMap((task) => task.description);
     const aiLookupResponse = await lookupDescription(aiTaskResponse.task.description, descriptions);
 
-    if (!aiLookupResponse) throw new Error("process: No task with this description found");
+    if (!aiLookupResponse) throw new AppError(404, "No task with this description found");
 
     descriptionFound = aiLookupResponse.description;
   }
 
   if (aiTaskResponse.intention === INTENTIONS.UPDATE) {
 
+    if (filteredTasks.length === 1) {
+      return update(filteredTasks[0].id, aiTaskResponse.task);
+    }
+
     const taskFound = filteredTasks.find((item) => item.description === descriptionFound);
     if (!taskFound) {
-      throw new Error("process: No task with this criteria found");
+      throw new AppError(404, "No task with this criteria found");
     }
 
     return update(taskFound.id, aiTaskResponse.task);
@@ -142,5 +183,5 @@ export async function process(text: string) {
   }
 
 
-  throw new Error("process: Analysis failed");
+  throw new AppError(500, "Analysis failed");
 }

@@ -6,7 +6,7 @@ export interface Task {
   date: string | null;
   time: string | null;
   assignee: string | null;
-  status: Status;
+  status: Status | null;
 }
 
 export class TaskResponse {

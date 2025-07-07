@@ -30,7 +30,7 @@ export default function InputBar() {
     const extractReply = (taskResponse: TaskResponse) => {
 
         if (!taskResponse || !taskResponse.tasks) {
-            throw {message: 'No task found!'}
+            throw { message: 'No task found!' }
         }
 
         let intentionMessage = '';
@@ -66,8 +66,8 @@ export default function InputBar() {
             return reply;
         }
 
-        throw {message:'Unexpected error occured!'}
-       
+        throw { message: 'Unexpected error occured!' }
+
     }
 
     const handleSend = async () => {
@@ -128,7 +128,7 @@ export default function InputBar() {
                 multiline
                 onKeyPress={handleKEnterPress}
             />
-            <IconButton icon={"send"} label="Send" onPress={handleSend} />
+            <IconButton icon={"send"} onPress={handleSend} />
         </View>
     );
 }
@@ -146,7 +146,6 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         borderWidth: 1,
         borderRadius: 8,
-        marginRight: 8,
         color: '#ccc'
     },
 });

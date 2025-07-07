@@ -95,7 +95,7 @@ function update(id: number, task: Task): TaskResponse {
   const originalTask = tasks[index];
 
   const changeTask = {
-    id: task.id,
+    id: !task.id ? originalTask.id : task.id,
     description: !task.description ? originalTask.description : task.description,
     date: !task.date ? originalTask.date : task.date,
     time: !task.time ? originalTask.time : task.time,

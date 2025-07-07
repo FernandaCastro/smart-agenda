@@ -4,7 +4,7 @@ import { Message } from '@/models/messageModel';
 export default function ChatMessage({ message }: { message: Message }) {
   return (
     <View style={[styles.message, styles[message.type]]}>
-      <Text style={{ fontFamily: 'monospace' }}>{message.content}</Text>
+      <Text style={{ fontFamily: 'monospace', fontSize: message.type == 'system' ? 10 : 13 }}>{message.content}</Text>
     </View>
   );
 }
@@ -14,7 +14,7 @@ const styles = StyleSheet.create({
     marginVertical: 4,
     padding: 10,
     borderRadius: 8,
-    maxWidth: '90%',
+    maxWidth: '95%',
   },
   user: {
     backgroundColor: '#DCF8C6',

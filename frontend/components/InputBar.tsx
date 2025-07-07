@@ -4,10 +4,9 @@ import { useMessageStore } from '@/stores/useMessageStore';
 import { Message } from '@/models/messageModel';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
-import { Task, TaskResponse, formatTasksAsText } from '@/models/taskModel';
+import { Task, TaskResponse, formatTasksAsCompactText, formatTasksAsText } from '@/models/taskModel';
 import { translateTextToTask } from '@/services/taskService';
 import IconButton from './IconButton';
-import { AppError } from '@/models/errorModel';
 
 export default function InputBar() {
     const [text, setText] = useState('');
@@ -55,7 +54,7 @@ export default function InputBar() {
         if (taskResponse.tasks.length > 0) {
 
             const sortedTasks = sortTasksByDateTime(taskResponse.tasks)
-            const tasksAsText = formatTasksAsText(sortedTasks);
+            const tasksAsText = Platform.OS == 'web' ? formatTasksAsText(sortedTasks) : formatTasksAsCompactText(sortedTasks);
 
             const reply: Message = {
                 id: uuidv4(),
@@ -115,6 +114,7 @@ export default function InputBar() {
                 e.preventDefault?.(); // Web: previne nova linha
                 handleSend?.();
             }
+            setText('');
         }
     };
 

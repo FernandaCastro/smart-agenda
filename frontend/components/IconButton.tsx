@@ -20,29 +20,25 @@ export default function IconButton({ icon, label, onPress }: Props) {
 
 const styles = StyleSheet.create({
     buttonContainer: {
-        width: '10%',
-        height: '100%',
         marginHorizontal: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 3,
         backgroundColor: '#25292e',
     },
     button: {
         borderRadius: 10,
-        width: '100%',
-        height: '100%',
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'row',
         borderWidth: 2,
         borderColor: '#43ccbc',
+        padding: 9
     },
     buttonIcon: {
         color: '#43ccbc',
     },
     buttonLabel: {
         color: '#43ccbc',
-        fontSize: 16,
+        fontSize: 14,
     },
 });

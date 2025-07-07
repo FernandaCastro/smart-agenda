@@ -1,3 +1,5 @@
+import { getStatusIcon } from "./constants";
+
 export type Task = {
   id: number;
   description: string;
@@ -12,18 +14,18 @@ export type TaskResponse = {
   tasks: Task[];
 };
 
+const pad = (text: string, length: number) => text.padEnd(length, ' ');
+const padMiddle = (text: string, length: number): string => {
+  if (text.length >= length) return text;
+
+  const totalPadding = length - text.length;
+  const paddingLeft = Math.floor(totalPadding / 2);
+  const paddingRight = Math.floor(totalPadding / 2);
+
+  return ' '.repeat(paddingLeft) + text + ' '.repeat(paddingRight);
+};
+
 export function formatTasksAsText(tasks: Task[]): string {
-
-  const pad = (text: string, length: number) => text.padEnd(length, ' ');
-  const padMiddle = (text: string, length: number): string => {
-    if (text.length >= length) return text;
-
-    const totalPadding = length - text.length;
-    const paddingLeft = Math.floor(totalPadding / 2);
-    const paddingRight = Math.floor(totalPadding / 2);
-
-    return ' '.repeat(paddingLeft) + text + ' '.repeat(paddingRight);
-  };
 
   const header =
     pad('Date', 12) +
@@ -44,10 +46,45 @@ export function formatTasksAsText(tasks: Task[]): string {
   let prevDate = '';
   const rows = tasks.map((task, index) => {
 
-    const icon = task.status === 'pending' ? '🕒' :
-      task.status === 'resolved' ? '✅' :
-        task.status === 'cancelled' ? '🚫' :
-          '?';
+    prevDate = date;
+    if (date !== task.date) {
+      date = task.date;
+    }
+
+    let assignee = task.assignee;
+    if (task.assignee && task.assignee.length >= 10) {
+      assignee = task.assignee.substring(0, 9).concat('...');
+    }
+
+    const printDate = (prevDate != date) ? pad(date, 12) : pad(' ', 12);
+    return (
+      printDate +
+      pad(task.time ?? '—', 6) +
+      padMiddle(getStatusIcon(task.status), 8) +
+      pad(assignee ?? '—', 15) +
+      pad(task.id ? task.id.toString() : '-', 3) +
+      task.description
+    );
+  });
+  return `${header}\n${line}\n${rows.join('\n')}`;
+}
+
+export function formatTasksAsCompactText(tasks: Task[]): string {
+
+  const header1 =
+    pad('#', 3) +
+    'Description';
+
+  const header2 =
+    pad('📍', 3) +
+    pad('Time', 10) +
+    pad('Assignee', 25);
+
+  const line = '-'.repeat(35)
+
+  let date = '';
+  let prevDate = '';
+  const rows = tasks.map((task, index) => {
 
     prevDate = date;
     if (date !== task.date) {
@@ -58,19 +95,19 @@ export function formatTasksAsText(tasks: Task[]): string {
     if (task.assignee && task.assignee.length >= 10) {
       assignee = task.assignee.substring(0, 9).concat('...');
     }
-    console.log(assignee);
 
-    const printDate = (prevDate != date) ? pad(date, 12) : pad(' ', 12);
+    const printDate = (prevDate != date) ? `\n${line}\n${date}\n` : '';
+
     return (
-      printDate +
-      pad(task.time ?? '—', 6) +
-      padMiddle(icon, 8) +
-      pad(assignee ?? '—', 15) +
+      printDate + '\n' +
       pad(task.id ? task.id.toString() : '-', 3) +
-      task.description
-      // + `\n${line}`
+      task.description + '\n' +
 
+      pad(getStatusIcon(task.status), 3) +
+      pad(task.time ?? ' ', 10) +
+      pad(assignee ?? ' ', 25)
     );
   });
-  return `${header}\n${line}\n${rows.join('\n')}`;
+
+  return `${header1}\n${header2}${rows.join('\n')}`;
 }

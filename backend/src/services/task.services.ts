@@ -1,12 +1,12 @@
 import { Task, TaskResponse } from '../models/task.models';
-import { INTENTIONS } from '../models/constants'
+import { INTENTIONS, STATUS } from '../models/constants'
 import { analyseText, lookupDescription } from './openai.services';
 
 let tasks: Task[] = [
   {
     id: 1,
     description: "Dentista para Letícia",
-    date: "11/07/2025",
+    date: "11-07-2025",
     time: "16:00",
     assignee: "Letícia",
     status: "pending"
@@ -14,7 +14,7 @@ let tasks: Task[] = [
   {
     id: 2,
     description: "Resolver bug no trabalho",
-    date: "5/07/2025",
+    date: "05-07-2025",
     time: "9:00",
     assignee: "Trabalho",
     status: "resolved"
@@ -22,7 +22,7 @@ let tasks: Task[] = [
   {
     id: 3,
     description: "Molhar as plantas",
-    date: "8/07/2025",
+    date: "08-07-2025",
     time: "16:00",
     assignee: "Fernanda",
     status: "pending"
@@ -47,7 +47,7 @@ function filter(criteria: Task): Task[] {
 
   const _tasks = tasks.filter(t => {
     if (criteria.id > 0 && t.id !== criteria.id) return false;
-    if (criteria.description && t.description !== criteria.description) return false;
+    if (criteria.description && t.description.toUpperCase() !== criteria.description.toUpperCase()) return false;
     if (criteria.assignee && t.assignee !== criteria.assignee) return false;
     if (criteria.status && t.status !== criteria.status) return false;
     if (criteria.date && t.date !== criteria.date) return false;
@@ -58,22 +58,41 @@ function filter(criteria: Task): Task[] {
   return _tasks;
 }
 
-function create(task: Task): Task {
+function create(task: Task): TaskResponse {
+
+  const criteria = {
+    id: task.id,
+    description: task.description,
+    date: task.date,
+    time: task.time,
+    assignee: task.assignee,
+    status: STATUS.PENDING
+  }
+
+  const existingTask = filter(criteria);
+  if (existingTask && existingTask.length > 0) {
+    const taskResponse = new TaskResponse(INTENTIONS.RETRIEVE, [existingTask[0]]);
+    return taskResponse;
+  }
+
   task.id = tasks.length + 1;
   tasks.push(task);
-  return task;
+
+  const taskResponse = new TaskResponse(INTENTIONS.CREATE, [task]);
+  return taskResponse;
 }
 
-function update(id: number, task: Partial<Task>): Task {
+function update(id: number, task: Task): TaskResponse {
 
   if (!id) throw new Error("update: Id cannot be null");
 
   const index = tasks.findIndex(t => t.id === id);
-  if (index >= 0) {
-    tasks[index] = { ...tasks[index], ...task };
-    return tasks[index];
-  }
-  throw new Error("update: Task not found");
+  if (index < 0) throw new Error("update: Task not found");
+
+  tasks[index] = { ...tasks[index], ...task };
+
+  const taskResponse = new TaskResponse(INTENTIONS.UPDATE, [tasks[index]]);
+  return taskResponse;
 }
 
 export async function process(text: string) {
@@ -81,9 +100,7 @@ export async function process(text: string) {
   const aiTaskResponse = await analyseText(text);
 
   if (aiTaskResponse.intention === INTENTIONS.CREATE) {
-    const task = create(aiTaskResponse.task);
-    const taskResponse = new TaskResponse(INTENTIONS.CREATE, [task]);
-    return taskResponse;
+    return create(aiTaskResponse.task);
   }
 
   //Pre-Filter : do not consider description
@@ -96,9 +113,9 @@ export async function process(text: string) {
   if (aiTaskResponse.task.description) {
     const descriptions = filteredTasks.flatMap((task) => task.description);
     const aiLookupResponse = await lookupDescription(aiTaskResponse.task.description, descriptions);
-    
+
     if (!aiLookupResponse) throw new Error("process: No task with this description found");
-    
+
     descriptionFound = aiLookupResponse.description;
   }
 
@@ -109,9 +126,7 @@ export async function process(text: string) {
       throw new Error("process: No task with this criteria found");
     }
 
-    const task = update(taskFound.id, aiTaskResponse.task);
-    const taskResponse = new TaskResponse(INTENTIONS.UPDATE, [task]);
-    return taskResponse;
+    return update(taskFound.id, aiTaskResponse.task);
   }
 
   if (aiTaskResponse.intention === INTENTIONS.RETRIEVE) {

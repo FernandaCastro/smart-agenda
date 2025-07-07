@@ -16,6 +16,8 @@ export async function analyseText(text: string) {
   - description: o que deve ou foi feito (verbo no infinitivo, se aplicável) ou null em caso de consulta genérica
   - date: no formato DD-MM-AAAA, ou null se não especificado
   - time: no formato HH:MM, ou null se não especificado
+  - start:
+  - end:
   - assignee: quem está envolvido, se mencionado, ou null
   - status: "pending", "resolved" ou "cancelled", ou null em caso de consulta genérica
   

@@ -10,7 +10,7 @@ let tasks: Task[] = [
     description: "Dentista para Letícia",
     date: "11-07-2025",
     time: "16:00",
-    assignee: "Letícia",
+    notes: "**Letícia**",
     status: "pending"
   },
   {
@@ -18,7 +18,7 @@ let tasks: Task[] = [
     description: "Resolver bug no trabalho",
     date: "05-07-2025",
     time: "9:00",
-    assignee: "Trabalho",
+    notes: "Trabalho",
     status: "resolved"
   },
   {
@@ -26,31 +26,31 @@ let tasks: Task[] = [
     description: "Molhar as plantas",
     date: "08-07-2025",
     time: "16:00",
-    assignee: "Fernanda",
+    notes: "Fernanda",
     status: "pending"
   }
 ]
 
 //Do not consider description
-function preFilter(task: Task) {
-  const criteria = {
-    id: task.id,
-    description: '',
-    date: task.date,
-    time: task.time,
-    assignee: task.assignee,
-    status: task.status
-  }
-  return filter(criteria);
-}
+// function preFilter(task: Task) {
+//   const criteria = {
+//     id: task.id,
+//     description: '',
+//     date: task.date,
+//     time: task.time,
+//     notes: task.notes,
+//     status: task.status
+//   }
+//   return filter(criteria);
+// }
 
-function filter(criteria: Task): Task[] {
-  if (!criteria) return tasks;
+function filter(source: Task[], criteria: Task): Task[] {
+  if (!criteria) return source;
 
-  const _tasks = tasks.filter(t => {
+  const _tasks = source.filter(t => {
     if (criteria.id > 0 && t.id !== criteria.id) return false;
-    if (criteria.description && t.description.toUpperCase() !== criteria.description.toUpperCase()) return false;
-    if (criteria.assignee && t.assignee !== criteria.assignee) return false;
+    if (criteria.description && !t.description.toLowerCase().includes(criteria.description.toLowerCase())) return false;
+    if (criteria.notes && !t.notes?.toLowerCase().includes(criteria.notes.toLowerCase())) return false;
     if (criteria.status && t.status !== criteria.status) return false;
     if (criteria.date && t.date !== criteria.date) return false;
     if (criteria.time && t.time !== criteria.time) return false;
@@ -67,11 +67,11 @@ function create(task: Task): TaskResponse {
     description: task.description,
     date: task.date,
     time: task.time,
-    assignee: task.assignee,
+    notes: task.notes,
     status: STATUS.PENDING
   }
 
-  const existingTask = filter(criteria);
+  const existingTask = filter(tasks, criteria);
   if (existingTask && existingTask.length > 0) {
     const taskResponse = new TaskResponse(INTENTIONS.RETRIEVE, [existingTask[0]]);
     return taskResponse;
@@ -99,7 +99,7 @@ function update(id: number, task: Task): TaskResponse {
     description: !task.description ? originalTask.description : task.description,
     date: !task.date ? originalTask.date : task.date,
     time: !task.time ? originalTask.time : task.time,
-    assignee: !task.assignee ? originalTask.assignee : task.assignee,
+    notes: !task.notes ? originalTask.notes : task.notes,
     status: !task.status ? originalTask.status : task.status
   }
 
@@ -113,71 +113,74 @@ export async function process(text: string) {
 
   const aiTaskResponse = await analyseText(text);
 
+  if (aiTaskResponse.error) {
+    throw aiTaskResponse.error;
+  }
+
   if (aiTaskResponse.intention === INTENTIONS.CREATE) {
     return create(aiTaskResponse.task);
   }
 
-  //Pre-Filter : do not consider description
-  // const filteredTasks = preFilter(aiTaskResponse.task);
-  // if (!filteredTasks || filteredTasks.length === 0) {
-  //   throw new AppError(404, "No task with this criteria found");
-  // }
-
-  // let descriptionFound = '';
-  // if (aiTaskResponse.task.description) {
-  //   const descriptions = filteredTasks.flatMap((task) => task.description);
-  //   const aiLookupResponse = await lookupDescription(aiTaskResponse.task.description, descriptions);
-
-  //   if (!aiLookupResponse) throw new AppError(404, "No task with this description found");
-
-  //   descriptionFound = aiLookupResponse.description;
-  // }
-
+  //Try to filter by "id", if informed
   let filteredTasks = tasks;
+
   if (aiTaskResponse.task.id) {
     const criteria = {
       id: aiTaskResponse.task.id,
       description: '',
       date: null,
       time: null,
-      assignee: null,
+      notes: null,
       status: null
     }
-    filteredTasks = filter(criteria);
+    filteredTasks = filter(filteredTasks, criteria);
   }
 
-  let descriptionFound = '';
+  //Try to filter by "description", if "id" not informed
+  const descriptionsFound: string[] = [];
   if (!aiTaskResponse.task.id && aiTaskResponse.task.description) {
     const descriptions = filteredTasks.flatMap((task) => task.description);
     const aiLookupResponse = await lookupDescription(aiTaskResponse.task.description, descriptions);
 
     if (!aiLookupResponse) throw new AppError(404, "No task with this description found");
 
-    descriptionFound = aiLookupResponse.description;
+    descriptionsFound.push(...aiLookupResponse.descriptions);
+
+    filteredTasks = filteredTasks.filter(task =>
+      descriptionsFound.some(desc =>
+        task.description.toLowerCase() === desc.toLowerCase()
+      )
+    );
   }
+  //
 
   if (aiTaskResponse.intention === INTENTIONS.UPDATE) {
+
+    if (filteredTasks.length === 0) {
+      throw new AppError(404, "No task with the criteria was found.");
+    }
 
     if (filteredTasks.length === 1) {
       return update(filteredTasks[0].id, aiTaskResponse.task);
     }
 
-    const taskFound = filteredTasks.find((item) => item.description === descriptionFound);
-    if (!taskFound) {
-      throw new AppError(404, "No task with this criteria found");
+    if (filteredTasks.length > 1) {
+      let message = "Be more specific and include the description or the task id in your request. \n Which of these tasks are you referring to? \n".concat(descriptionsFound.join('\n'));
+      throw new AppError(404, message);
     }
 
-    return update(taskFound.id, aiTaskResponse.task);
+    // const taskFound = filteredTasks.find((item) => item.description === descriptionFound);
+    // if (!taskFound) {
+    //   throw new AppError(404, "No task with this criteria found");
+    // }
+
+    // return update(taskFound.id, aiTaskResponse.task);
   }
 
   if (aiTaskResponse.intention === INTENTIONS.RETRIEVE) {
 
-    if (aiTaskResponse.task.description) {
-      aiTaskResponse.task.description = descriptionFound;
-    }
-
     //Filter: consider description
-    const _tasks = filter(aiTaskResponse.task);
+    const _tasks = filter(filteredTasks, aiTaskResponse.task);
     const taskResponse = new TaskResponse(INTENTIONS.RETRIEVE, _tasks);
     return taskResponse;
   }

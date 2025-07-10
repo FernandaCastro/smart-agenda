@@ -5,7 +5,7 @@ export interface Task {
   description: string;
   date: string | null;
   time: string | null;
-  assignee: string | null;
+  notes: string | null;
   status: Status | null;
 }
 

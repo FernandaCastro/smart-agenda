@@ -1,6 +1,7 @@
 import axios from 'axios';
 import dayjs from 'dayjs';
 import { AIDescriptionResponse, AITaskResponse } from '../models/openai.models';
+import { AppError } from '../models/error.models';
 
 export async function analyseText(text: string) {
 
@@ -12,21 +13,22 @@ export async function analyseText(text: string) {
 
   Retorne um JSON com os seguintes campos:
 
-  - intention: "create", "update" (para "resolved" ou "cancelled"), "delete"(para remover uma tarefa) ou "retrieve" (para consultar tarefas)
+  - intention: "create", "update" (para alteração de status, descrição, data, hora e notas), "delete"(para remover uma tarefa) ou "retrieve" (para consultar tarefas)
   - id: número inteiro que identifica a tarefa, se não informado.
   - description: o que deve ou foi feito (verbo no infinitivo, se aplicável) ou null em caso de consulta genérica
   - date: no formato DD-MM-AAAA, ou null se não especificado
   - time: no formato HH:MM, ou null se não especificado
-  - start:
-  - end:
-  - assignee: quem está envolvido, se mencionado, ou null
+  - start: no formato DD-MM-AAAA HH:MM, ou nul se não especificado
+  - end: no formato DD-MM-AAAA HH:MM, ou nul se não especificado
+  - notes: texto contendo detalhes ou notas sobre a tarefa, se mencionado, ou null
   - status: "pending", "resolved" ou "cancelled", ou null em caso de consulta genérica
+  - erro: um json puro, sem crases nem markdown de acordo com os critérios para preencimento abaixo.
   
   Critérios para preenchimento:
 
   1. **intention**:
    - Se a frase indicar que algo deve ser feito → "create"
-   - Se indicar que algo foi feito, cancelado, ou a tarefa deve ser alterada → "update"
+   - Se indicar que algo foi feito, cancelado, ou que tarefa deve ser alterada em algum dos seus atributos, ex: incluir, alterar atributo → "update"
    - Se for uma pergunta ou consulta sobre tarefas → "retrieve"
 
    2. **status**:
@@ -44,6 +46,20 @@ export async function analyseText(text: string) {
    - Em caso de update, se o id da tarefa foi identificado, use null, caso contrário infira a possível descrição
 
    5. **Campos ausentes ou não mencionados** devem ser preenchidos com null.
+
+   6. **start**
+   - Se for uma consulta de um período específico, este campo representa o início do período, caso contrário -> null
+
+   7. ** end**
+   - Se for uma consulta de um período específico, este campo representa o fim do período, caso contrário -> null
+
+   8. **error**
+   - Caso intention seja "update" o id é obrigatório, caso contrario preencha error com o json: {statusCode: 404, message: Task Id was not informed} "
+
+   9. **notes**
+   - Se a frase mencionar "detalhes", "notas" o texto deverá ser armazenado no atributo "notes".
+   - Manter markdown, caso tenha sido informado junto com o texto de detalhes ou notas.
+
 
   Hoje é "${today}.
   Frase: "${text}"
@@ -75,10 +91,13 @@ export async function analyseText(text: string) {
     console.log(json);
     return new AITaskResponse(
       json.intention,
+      json.start,
+      json.end,
+      json.error ? new AppError(json.error.statusCode, json.error.message) : null,
       {
         id: json.id,
         description: json.description,
-        assignee: json.assignee,
+        notes: json.notes,
         date: json.date,
         time: json.time,
         status: json.status
@@ -97,7 +116,7 @@ export async function lookupDescription(text: string, descriptions: string[]) {
   E a lista de tarefas: "${descriptions}"
 
   Retorne no formato JSON com os campos:
-  - description: Contendo exatamente qual item da lista tem o significado mais próximo da frase.
+  - descriptions: contendo os itens da lista de tarefas com o significado mais próximo da frase.
   
   Retorne apenas o JSON puro, sem crases nem markdown.
   `
@@ -121,7 +140,7 @@ export async function lookupDescription(text: string, descriptions: string[]) {
     throw new Error("Invalid response from Openai")
   }
   const json = JSON.parse(content);
-  return new AIDescriptionResponse(json.description);
+  return new AIDescriptionResponse(json.descriptions);
 
 
 }

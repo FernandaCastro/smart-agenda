@@ -23,31 +23,31 @@ export default function TaskView({ action, task }: Props) {
                 name={getStatusIcon(task.status)}
                 size={20}
                 color={getStatusColor(task.status)} />
-            <Text style={{color: getStatusColor(task.status)}}>{task.status}</Text>
+            <Text style={{ color: getStatusColor(task.status) }}>{task.status}</Text>
         </View>
     );
 
     const getStatusColor = (status: 'pending' | 'resolved' | 'cancelled'): string => {
         switch (status) {
             case 'pending':
-                return '#f39c12'; 
+                return '#f39c12';
             case 'resolved':
-                return '#27ae60'; 
+                return '#27ae60';
             case 'cancelled':
-                return '#e74c3c'; 
+                return '#e74c3c';
             default:
-                return '#333'; 
+                return '#333';
         }
     };
 
     const getStatusIcon = (status: 'pending' | 'resolved' | 'cancelled'): string => {
         switch (status) {
             case 'pending':
-                return 'hourglass-empty'; 
+                return 'hourglass-empty';
             case 'resolved':
-                return 'check-circle'; 
+                return 'check-circle';
             case 'cancelled':
-                return 'cancel'; 
+                return 'cancel';
             default:
                 return 'question';
         }
@@ -65,7 +65,7 @@ export default function TaskView({ action, task }: Props) {
             </View>
 
             <View style={styles.row}>
-                {task.assignee && <Data icon="co-present" labelStyle={styles.detail} label={task.assignee} />}
+                {task.notes && <Data icon="co-present" labelStyle={styles.detail} label={task.notes} />}
             </View>
 
             <Status task={task} />

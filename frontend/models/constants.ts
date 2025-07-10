@@ -10,7 +10,7 @@ export const STATUS = {
   CANCELLED: 'cancelled',
 } as const;
 
-const STATUS_ICON = {
+export const STATUS_ICON = {
   PENDING: '🕒',
   RESOLVED: '✅',
   CANCELLED: '🚫',

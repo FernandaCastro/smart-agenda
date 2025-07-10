@@ -1,10 +1,19 @@
-import { Text, View, StyleSheet } from 'react-native';
+import { Text, View, StyleSheet, Platform } from 'react-native';
 import { Message } from '@/models/messageModel';
 
 export default function ChatMessage({ message }: { message: Message }) {
+
   return (
     <View style={[styles.message, styles[message.type]]}>
-      <Text style={{ fontFamily: 'monospace', fontSize: message.type == 'system' ? 10 : 13 }}>{message.content}</Text>
+      {typeof message.content === 'string' ? (
+        <Text style={{ fontFamily: 'monospace', fontSize: message.type == 'system' ? 10 : 13 }}>
+          {message.content}
+        </Text>
+      ) : (
+        <View style={styles.embedded}>
+          {message.content}
+        </View>
+      )}
     </View>
   );
 }
@@ -13,8 +22,13 @@ const styles = StyleSheet.create({
   message: {
     marginVertical: 4,
     padding: 10,
-    borderRadius: 8,
-    maxWidth: '95%',
+    borderRadius: 20,
+    maxWidth: '98%',
+    alignSelf: 'flex-start',
+  },
+  embedded: {
+    flexShrink: 1,
+    minWidth: '100%',
   },
   user: {
     backgroundColor: '#DCF8C6',

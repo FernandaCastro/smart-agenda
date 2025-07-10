@@ -1,19 +1,17 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, Pressable, StyleSheet, View, ViewStyle, StyleProp } from 'react-native';
 
-type IconButtonProps = {
+type Props = {
     icon: keyof typeof MaterialIcons.glyphMap;
-    label?: string;
     onPress: () => void;
 };
 
-export default function IconButton({ icon, label, onPress }: IconButtonProps) {
+export default function MiniButton({ icon, onPress }: Props) {
     
     return (
         <View style={ styles.buttonContainer}>
             <Pressable style={styles.button} onPress={onPress}>
-                <MaterialIcons style={styles.buttonIcon} name={icon} size={24}/>
-                <Text style={styles.buttonLabel}>{label}</Text>
+                <MaterialIcons style={styles.buttonIcon} name={icon} size={20}/>
             </Pressable>
         </View>
     );
@@ -24,22 +22,15 @@ const styles = StyleSheet.create({
         marginHorizontal: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#25292e',
     },
     button: {
-        borderRadius: 10,
+        borderRadius:8,
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'row',
-        borderWidth: 2,
-        borderColor: '#43ccbc',
-        padding: 9
+        padding: 2
     },
     buttonIcon: {
         color: '#43ccbc',
-    },
-    buttonLabel: {
-        color: '#43ccbc',
-        fontSize: 14,
     },
 });

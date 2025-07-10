@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { Text, View } from "react-native";
 
 
 export default function TabLayout() {
@@ -17,27 +18,19 @@ export default function TabLayout() {
                 },
             }}>
             <Tabs.Screen
-                name="mainScreen"
-                options={{
-                    title: 'Chat Message',
-                    tabBarIcon: ({ color, focused }) => (
-                        <Ionicons name={focused ? 'chatbubble-sharp' : 'chatbubble-outline'} color={color} size={24} />
-                    )
-                }} />
-            <Tabs.Screen
                 name="index"
                 options={{
-                    title: 'Home',
+                    title: 'Chat',
+                    headerTitle: ({ tintColor }) => (
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Ionicons name='chatbubble-outline' color={tintColor} size={24} />
+                            <Text style={{ paddingLeft: 5, fontSize: 16, fontWeight: 'bold', color: tintColor}}>
+                                Smart Agenda
+                            </Text>
+                        </View>
+                    ),
                     tabBarIcon: ({ color, focused }) => (
-                        <Ionicons name={focused ? 'home-sharp' : 'home-outline'} color={color} size={24} />
-                    )
-                }} />
-            <Tabs.Screen
-                name="result"
-                options={{
-                    title: 'Results',
-                    tabBarIcon: ({ color, focused }) => (
-                        <Ionicons name={focused ? "list" : 'list-outline'} color={color} size={24} />
+                        <Ionicons name={focused ? 'chatbubble-sharp' : 'chatbubble-outline'} color={color} size={24} />
                     )
                 }} />
 

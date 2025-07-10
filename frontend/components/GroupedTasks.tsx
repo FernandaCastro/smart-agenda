@@ -41,7 +41,7 @@ function TaskDetails({ task, show }: PropsTableDetails) {
     <View style={stylesTable.tableDetails}>
       <View style={stylesTable.rowDetails}>
         <Text style={stylesTable.headerDetails}>Notes: </Text>
-        <Markdown style={{body: {color: '#333', fontSize: 13, marginTop: 0, paddingTop: 0}, }}>
+        <Markdown style={{body: {color: '#333', fontSize: 13, marginTop: 0, paddingTop: 0,}, paragraph: { marginTop: 0}}} >
           {task.notes}
         </Markdown>
       </View>
@@ -152,7 +152,6 @@ const stylesTable = StyleSheet.create({
     flexDirection: 'row',
     borderColor: '#ddd',
     alignItems: "flex-start",
-    padding: 3
   },
   headerDetails: {
     fontWeight: 'bold',

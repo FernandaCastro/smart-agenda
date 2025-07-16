@@ -4,7 +4,8 @@ import { Task } from "./task.models";
 
 export interface AITaskResponse {
     intention: Intention;
-    start:string | null;
+    newDescription: string | null;
+    start: string | null;
     end: string | null;
     error: AppError | null,
     task: Task;
@@ -18,6 +19,7 @@ export class AITaskResponse {
 
     constructor(
         public intention: Intention,
+        public newDescription: string | null,
         public start: string | null,
         public end: string | null,
         public error: AppError | null,
@@ -27,6 +29,7 @@ export class AITaskResponse {
     toJSON() {
         return {
             intention: this.intention,
+            newDescription: this.newDescription,
             start: this.start,
             end: this.end,
             error: this.error,

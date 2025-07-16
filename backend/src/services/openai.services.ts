@@ -9,62 +9,72 @@ export async function analyseText(text: string) {
 
 
   const prompt = `
-  A partir da frase abaixo, identifique se o usuário deseja **criar**, **atualizar** (marcar como resolvida ou cancelada) ou **consultar** tarefas.
+A partir da frase abaixo, identifique se o usuário deseja **criar**, **atualizar** (marcar como resolvida ou cancelada), **remover** ou **consultar** tarefas.
 
-  Retorne um JSON com os seguintes campos:
+Retorne um JSON com os seguintes campos:
 
-  - intention: "create", "update" (para alteração de status, descrição, data, hora e notas), "delete"(para remover uma tarefa) ou "retrieve" (para consultar tarefas)
-  - id: número inteiro que identifica a tarefa, se não informado.
-  - description: o que deve ou foi feito (verbo no infinitivo, se aplicável) ou null em caso de consulta genérica
-  - date: no formato DD-MM-AAAA, ou null se não especificado
-  - time: no formato HH:MM, ou null se não especificado
-  - start: no formato DD-MM-AAAA HH:MM, ou nul se não especificado
-  - end: no formato DD-MM-AAAA HH:MM, ou nul se não especificado
-  - notes: texto contendo detalhes ou notas sobre a tarefa, se mencionado, ou null
-  - status: "pending", "resolved" ou "cancelled", ou null em caso de consulta genérica
-  - erro: um json puro, sem crases nem markdown de acordo com os critérios para preencimento abaixo.
-  
-  Critérios para preenchimento:
+- intention: "create", "update" (para alteração de status, descrição, data, hora ou notas), "delete" (para remoção de uma tarefa) ou "retrieve" (para consulta de tarefas).
+- id: número inteiro que identifica a tarefa, ou null se não informado.
+- description: descrição da tarefa com verbo no infinitivo e a primeira letra maiúscula, se aplicável. Em consultas genéricas, este campo deve ser null.
+- newDescription: nova descrição da tarefa (com verbo no infinitivo e primeira letra maiúscula), somente se for uma alteração explícita da descrição. Caso contrário, null.
+- date: data da tarefa no formato DD-MM-AAAA, ou null se não especificado.
+- time: hora da tarefa no formato HH:MM, ou null se não especificado.
+- start: data e hora de início no formato DD-MM-AAAA HH:MM, ou null se não especificado.
+- end: data e hora de término no formato DD-MM-AAAA HH:MM, ou null se não especificado.
+- notes: texto contendo detalhes ou notas sobre a tarefa, ou null se não mencionado. Se houver markdown, mantenha o markdown.
+- status: "pending", "resolved", "cancelled", ou null se não mencionado.
+- error: apenas se a condição descrita abaixo for verdadeira. Deve conter um JSON puro, sem crases, aspas desnecessárias ou markdown.
 
-  1. **intention**:
-   - Se a frase indicar que algo deve ser feito → "create"
-   - Se indicar que algo foi feito, cancelado, ou que tarefa deve ser alterada em algum dos seus atributos, ex: incluir, alterar atributo → "update"
-   - Se for uma pergunta ou consulta sobre tarefas → "retrieve"
+Critérios para preenchimento:
 
-   2. **status**:
-   - Se a tarefa ainda deve ser feita → "pending"
-   - Se a tarefa foi feita → "resolved"
-   - Se foi cancelada → "cancelled"
-   - Se for uma consulta e o status não foi mencionado → null
+1. **intention**
+  - Se a frase indicar que algo deve ser feito → intention = "create"
+  - Se indicar que algo foi feito, cancelado ou alterado → intention = "update"
+  - Se for uma pergunta ou consulta → intention = "retrieve"
+  - Se indicar remoção de uma tarefa → intention = "delete"
 
-   3. **id**:
-   - Considere que a expressão "tarefa 3", "tarefa número 3" ou "a terceira tarefa" representa o campo "id": 3. Sempre que encontrar esse padrão, extraia o número como valor de id
+2. **status**
+  - Se a tarefa ainda deve ser feita → status = "pending"
+  - Se a tarefa foi feita → status = "resolved"
+  - Se a tarefa foi cancelada → status = "cancelled"
+  - Se não houver menção de status → status = null
 
-   4. **description**:
-   - Use o verbo no infinitivo e com a primeira letra maiúscula(ex: "Ir ao médico", "Resolver bug") se aplicável
-   - Em caso de consulta, se não houver uma ação clara, use null, caso contrário infira a possível descrição
-   - Em caso de update, se o id da tarefa foi identificado, use null, caso contrário infira a possível descrição
+3. **id**
+  - Se a frase mencionar "tarefa 3", "tarefa número 3" ou "a terceira tarefa", extraia o número correspondente: id = 3
 
-   5. **Campos ausentes ou não mencionados** devem ser preenchidos com null.
+4. **description**
+  - Deve conter a ação a ser realizada ou realizada, em verbo no infinitivo com a primeira letra maiúscula (ex: "Ir ao médico", "Resolver bug")
+  - Em consultas genéricas, se não houver ação clara → description = null
 
-   6. **start**
-   - Se for uma consulta de um período específico, este campo representa o início do período, caso contrário -> null
+5. **newDescription**
+  - Apenas se a frase indicar alteração explícita da descrição. Caso contrário → newDescription = null
 
-   7. ** end**
-   - Se for uma consulta de um período específico, este campo representa o fim do período, caso contrário -> null
+6. **start**
+  - Se for uma consulta por período específico → usar como data/hora de início. Caso contrário → start = null
 
-   8. **error**
-   - Caso intention seja "update" ou o id ou a descrição da tarefa são obrigatórios, caso contrario preencha error com o json: {statusCode: 404, message: Task Id or description were not informed} "
+7. **end**
+  - Se for uma consulta por período específico → usar como data/hora de término. Caso contrário → end = null
 
-   9. **notes**
-   - Se a frase mencionar "detalhes", "notas" o texto deverá ser armazenado no atributo "notes".
-   - Manter markdown, caso tenha sido informado junto com o texto de detalhes ou notas.
+8. **notes**
+  - Se a frase mencionar "detalhes", "notas", ou conteúdo adicional → preencher notes com esse conteúdo (mantendo markdown, se houver). Caso contrário → notes = null
 
+9. **Campos ausentes**
+  - Qualquer campo não mencionado na frase ou que não possa ser inferido com clareza deve ser preenchido com null.
 
-  Hoje é "${today}.
-  Frase: "${text}"
-  Retorne apenas o JSON puro, sem crases nem markdown.
-  `;
+10. **error**
+  - Por padrão, error = null.
+  - Preencha o campo error **somente** se a seguinte condição lógica for verdadeira:
+    id == null && description == null && intention == "update"
+  - Nesse caso, defina:
+    error = {statusCode: 404, message: "Task Id and description were not informed"}
+  - Em todos os outros casos, error deve ser null.
+
+Hoje é ${today}.
+Frase: "${text}"
+
+Retorne **apenas** o JSON puro, sem crases, sem markdown, sem texto adicional.
+`;
+
   const res = await axios.post(
     'https://api.openai.com/v1/chat/completions',
     {
@@ -91,6 +101,7 @@ export async function analyseText(text: string) {
     console.log(json);
     return new AITaskResponse(
       json.intention,
+      json.newDescription,
       json.start,
       json.end,
       json.error ? new AppError(json.error.statusCode, json.error.message) : null,
@@ -112,11 +123,12 @@ export async function analyseText(text: string) {
 export async function lookupDescription(text: string, descriptions: string[]) {
 
   const prompt = `
+  A partir da frase abaixo e a lista de tarefas informadas, encontrar as tarefas que mais se assemelham à frase informada, buscando encontrar, se possível, um único item.
   Dada a frase: "${text}"  
   E a lista de tarefas: "${descriptions}"
 
   Retorne no formato JSON com os campos:
-  - descriptions: contendo os itens da lista de tarefas com o significado mais próximo da frase.
+  - descriptions: contendo os itens da lista de tarefas mais próximo da frase informada.
   
   Retorne apenas o JSON puro, sem crases nem markdown.
   `

@@ -82,7 +82,7 @@ function createTask(task: Task): TaskResponse {
   return taskResponse;
 }
 
-function updateTask(id: number, task: Task): TaskResponse {
+function updateTask(id: number, task: Task, newDescription: string | null): TaskResponse {
 
   if (!id) throw new AppError(400, "Id cannot be null");
 
@@ -93,7 +93,7 @@ function updateTask(id: number, task: Task): TaskResponse {
 
   const changeTask = {
     id: !task.id ? originalTask.id : task.id,
-    description: !task.description ? originalTask.description : task.description,
+    description: !newDescription ? originalTask.description : newDescription,
     date: !task.date ? originalTask.date : task.date,
     time: !task.time ? originalTask.time : task.time,
     notes: !task.notes ? originalTask.notes : task.notes,
@@ -193,7 +193,7 @@ export async function process(text: string) {
   }
 
   if (aiTaskResponse.intention === INTENTIONS.UPDATE) {
-    return updateTask(filteredTasks[0].id, aiTaskResponse.task);
+    return updateTask(filteredTasks[0].id, aiTaskResponse.task, aiTaskResponse.newDescription);
   }
 
   if (aiTaskResponse.intention === INTENTIONS.DELETE) {

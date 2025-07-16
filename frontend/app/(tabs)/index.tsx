@@ -9,6 +9,7 @@ import {
 import ChatMessage from '@/components/ChatMessage';
 import InputBar from '@/components/InputBar';
 import { useMessageStore } from '@/stores/useMessageStore';
+import CommandInputBar from '@/components/CommandInputBar';
 
 export default function MainScreen() {
   const messages = useMessageStore((state) => state.messages);
@@ -38,7 +39,7 @@ export default function MainScreen() {
           ListFooterComponent={<View style={{ height: 20 }} />}
         />
       </View>
-      <InputBar />
+      <CommandInputBar />
     </KeyboardAvoidingView>
   );
 }

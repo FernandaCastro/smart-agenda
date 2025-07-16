@@ -3,6 +3,7 @@ import { INTENTIONS, STATUS } from '../models/constants'
 import { analyseText, lookupDescription } from './openai.services';
 import dayjs from 'dayjs';
 import { AppError } from '../models/error.models';
+import { AITaskResponse } from '../models/openai.models';
 
 let tasks: Task[] = [
   {
@@ -31,36 +32,32 @@ let tasks: Task[] = [
   }
 ]
 
-//Do not consider description
-// function preFilter(task: Task) {
-//   const criteria = {
-//     id: task.id,
-//     description: '',
-//     date: task.date,
-//     time: task.time,
-//     notes: task.notes,
-//     status: task.status
-//   }
-//   return filter(criteria);
-// }
-
-function filter(source: Task[], criteria: Task): Task[] {
-  if (!criteria) return source;
+function filter(source: Task[], criteria?: Task | null, aiTaskResponse?: AITaskResponse): Task[] {
+  if (!criteria && !aiTaskResponse) return source;
 
   const _tasks = source.filter(t => {
-    if (criteria.id > 0 && t.id !== criteria.id) return false;
-    if (criteria.description && !t.description.toLowerCase().includes(criteria.description.toLowerCase())) return false;
-    if (criteria.notes && !t.notes?.toLowerCase().includes(criteria.notes.toLowerCase())) return false;
-    if (criteria.status && t.status !== criteria.status) return false;
-    if (criteria.date && t.date !== criteria.date) return false;
-    if (criteria.time && t.time !== criteria.time) return false;
+
+    if (criteria) {
+      if (criteria.id > 0 && t.id !== criteria.id) return false;
+      if (criteria.description && !t.description.toLowerCase().includes(criteria.description.toLowerCase())) return false;
+      if (criteria.notes && !t.notes?.toLowerCase().includes(criteria.notes.toLowerCase())) return false;
+      if (criteria.status && t.status !== criteria.status) return false;
+      if (criteria.date && t.date !== criteria.date) return false;
+      if (criteria.time && t.time !== criteria.time) return false;
+    }
+
+    if (aiTaskResponse) {
+      if (aiTaskResponse.start && t.date && t.date < aiTaskResponse.start) return false;
+      if (aiTaskResponse.end && t.date && t.date > aiTaskResponse.end) return false;
+    }
+
     return true;
   });
 
   return _tasks;
 }
 
-function create(task: Task): TaskResponse {
+function createTask(task: Task): TaskResponse {
 
   const criteria = {
     id: task.id,
@@ -85,7 +82,7 @@ function create(task: Task): TaskResponse {
   return taskResponse;
 }
 
-function update(id: number, task: Task): TaskResponse {
+function updateTask(id: number, task: Task): TaskResponse {
 
   if (!id) throw new AppError(400, "Id cannot be null");
 
@@ -109,6 +106,19 @@ function update(id: number, task: Task): TaskResponse {
   return taskResponse;
 }
 
+function deleteTask(id: number): TaskResponse {
+
+  if (!id || id === 0) throw new AppError(400, "Id cannot be null");
+
+  const index = tasks.findIndex(t => t.id === id);
+  if (index < 0) throw new AppError(404, "Task not found");
+
+  const taskResponse = new TaskResponse(INTENTIONS.DELETE, [tasks[index]]);
+
+  tasks.splice(index, 1);
+  return taskResponse;
+}
+
 export async function process(text: string) {
 
   const aiTaskResponse = await analyseText(text);
@@ -117,13 +127,14 @@ export async function process(text: string) {
     throw aiTaskResponse.error;
   }
 
+  //CREATE
   if (aiTaskResponse.intention === INTENTIONS.CREATE) {
-    return create(aiTaskResponse.task);
+    return createTask(aiTaskResponse.task);
   }
 
-  //Try to filter by "id", if informed
   let filteredTasks = tasks;
 
+  //Filter by "id", if informed
   if (aiTaskResponse.task.id) {
     const criteria = {
       id: aiTaskResponse.task.id,
@@ -136,7 +147,12 @@ export async function process(text: string) {
     filteredTasks = filter(filteredTasks, criteria);
   }
 
-  //Try to filter by "description", if "id" not informed
+  //Filter by period of time
+  if (!aiTaskResponse.task.id  && (aiTaskResponse.start || aiTaskResponse.end)) {
+    filteredTasks = filter(filteredTasks, null, aiTaskResponse);
+  }
+
+  //Filter by "description", if "id" not informed
   const descriptionsFound: string[] = [];
   if (!aiTaskResponse.task.id && aiTaskResponse.task.description) {
     const descriptions = filteredTasks.flatMap((task) => task.description);
@@ -152,31 +168,8 @@ export async function process(text: string) {
       )
     );
   }
-  //
 
-  if (aiTaskResponse.intention === INTENTIONS.UPDATE) {
-
-    if (filteredTasks.length === 0) {
-      throw new AppError(404, "No task with the criteria was found.");
-    }
-
-    if (filteredTasks.length === 1) {
-      return update(filteredTasks[0].id, aiTaskResponse.task);
-    }
-
-    if (filteredTasks.length > 1) {
-      let message = "Be more specific and include the description or the task id in your request. \n Which of these tasks are you referring to? \n".concat(descriptionsFound.join('\n'));
-      throw new AppError(404, message);
-    }
-
-    // const taskFound = filteredTasks.find((item) => item.description === descriptionFound);
-    // if (!taskFound) {
-    //   throw new AppError(404, "No task with this criteria found");
-    // }
-
-    // return update(taskFound.id, aiTaskResponse.task);
-  }
-
+  //RETRIEVE
   if (aiTaskResponse.intention === INTENTIONS.RETRIEVE) {
 
     //Filter: consider description
@@ -185,6 +178,27 @@ export async function process(text: string) {
     return taskResponse;
   }
 
+  //UPDATE OR DELETE
+  if (filteredTasks.length === 0) {
+    throw new AppError(404, "No task with the criteria was found.");
+  }
+
+  if (filteredTasks.length > 1) {
+
+    const messageDetails = filteredTasks.flatMap((task) => `# ${task.id} - ${task.description}`);
+
+    let message = "I was unable to identify the task. Please resent your original request but inform also a task # or a description. Which of these tasks are you referring to?";
+
+    throw new AppError(404, message, messageDetails);
+  }
+
+  if (aiTaskResponse.intention === INTENTIONS.UPDATE) {
+    return updateTask(filteredTasks[0].id, aiTaskResponse.task);
+  }
+
+  if (aiTaskResponse.intention === INTENTIONS.DELETE) {
+    return deleteTask(filteredTasks[0].id);
+  }
 
   throw new AppError(500, "Analysis failed");
 }

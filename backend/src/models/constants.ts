@@ -2,6 +2,7 @@ export const INTENTIONS = {
   CREATE: 'create',
   UPDATE: 'update',
   RETRIEVE: 'retrieve',
+  DELETE: 'delete'
 } as const;
 
 export const STATUS = {

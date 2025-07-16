@@ -54,7 +54,7 @@ export async function analyseText(text: string) {
    - Se for uma consulta de um período específico, este campo representa o fim do período, caso contrário -> null
 
    8. **error**
-   - Caso intention seja "update" o id é obrigatório, caso contrario preencha error com o json: {statusCode: 404, message: Task Id was not informed} "
+   - Caso intention seja "update" ou o id ou a descrição da tarefa são obrigatórios, caso contrario preencha error com o json: {statusCode: 404, message: Task Id or description were not informed} "
 
    9. **notes**
    - Se a frase mencionar "detalhes", "notas" o texto deverá ser armazenado no atributo "notes".

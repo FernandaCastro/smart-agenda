@@ -12,37 +12,24 @@ type PropsTableDetails = {
 };
 
 type PropsTable = {
+  groupKey: string,
   tasks: Task[];
 };
 
 type GroupedTasksViewProps = {
-  innitialText?: string,
+  initialText?: string,
   tasks: Task[];
 };
 
 function TaskDetails({ task, show }: PropsTableDetails) {
- if (show === 0 || show != task.id) return;
-  const markdownText = `#### jgvhgvhv 
-  hgvh jhgkgvkyf jhvjvg jhbyvyvyfcyfcycy
-  ihbuybubububjhkjfhcjf jgvhgvhv hgvh jhgkgvkyf jhvjvgv
-  jhbyvyvyfcyfcycyihbuybububub
-  jhkjfhcjfc
-  * jgvhgvhv 
-  * hgvh 
-  * jhgkgvkyf 
-  * jhvjvgv
-  
-  **jhbyvyvyfcyfcycy**
-  ihbuybububub
-  jhkjfhcjfc
-  jgvhgvhv hgvh jhgkgvkyf jhvjvgv`;
+  if (show === 0 || show != task.id) return;
 
   return (
     <View style={stylesTable.tableDetails}>
       <View style={stylesTable.rowDetails}>
         <Text style={stylesTable.headerDetails}>Notes: </Text>
-        <Markdown style={{body: {color: '#333', fontSize: 13, marginTop: 0, paddingTop: 0,}, paragraph: { marginTop: 0}}} >
-          {task.notes}
+        <Markdown style={{ body: { color: '#333', fontSize: 13, marginTop: 0, paddingTop: 0, }, paragraph: { marginTop: 0 } }} >
+          {task.notes ? task.notes : ''}
         </Markdown>
       </View>
     </View>
@@ -50,37 +37,36 @@ function TaskDetails({ task, show }: PropsTableDetails) {
 
 }
 
-function TaskTable({ tasks }: PropsTable) {
+function TaskTable({ groupKey, tasks }: PropsTable) {
 
   const [showDetail, setShowDetail] = useState(0);
 
   return (
-    <View style={stylesTable.table}>
+    <View key={groupKey} style={stylesTable.table}>
       <View style={stylesTable.headerRow}>
-        <Text style={[stylesTable.cellStatus, stylesTable.header]} />
-        <Text style={[stylesTable.cellStatus, stylesTable.header]} />
+        <Text style={[stylesTable.cellGroupData, stylesTable.header]}>{groupKey}</Text>
         <Text style={[stylesTable.cellTime, stylesTable.header]}>Time</Text>
         <Text style={[stylesTable.cellId, stylesTable.header]}>#</Text>
         <Text style={[stylesTable.cellDescription, stylesTable.header]}>Description</Text>
       </View>
 
       {tasks.map((task) => (
-        <>
-          <View key={task.id} style={stylesTable.row}>
-            <MiniButton icon="more-vert" onPress={() => !showDetail ? setShowDetail(task.id) : setShowDetail(0)} />
+        <View key={task.id}>
+          <View style={stylesTable.row}>
+            <MiniButton icon="more-vert" onPress={() => showDetail !==  task.id  ? setShowDetail(task.id) : setShowDetail(0)} />
             <Text style={stylesTable.cellStatus}>{getStatusIcon(task.status)}</Text>
             <Text style={stylesTable.cellTime}>{task.time ?? '—'}</Text>
             <Text style={stylesTable.cellId}>{task.id}</Text>
             <Text style={stylesTable.cellDescription} numberOfLines={2} ellipsizeMode="tail">{task.description}</Text>
           </View>
           {<TaskDetails show={showDetail} task={task} />}
-        </>
+        </View>
       ))}
     </View>
   )
 }
 
-export default function GroupedTasksView({ tasks }: GroupedTasksViewProps) {
+export default function GroupedTasksView({ initialText, tasks }: GroupedTasksViewProps) {
 
   const grouped = groupTasksByDate(tasks);
   const sortedDates = Object.keys(grouped).sort();
@@ -88,9 +74,9 @@ export default function GroupedTasksView({ tasks }: GroupedTasksViewProps) {
   return (
     <View style={styles.container}>
       {sortedDates.map((date) => (
-        <View key={date}>
-          <Text style={styles.dateTitle}>{date}</Text>
-          <TaskTable tasks={grouped[date]} />
+        <View key={"main-" + date}>
+          <Text style={styles.initialText}>{initialText}</Text>
+          <TaskTable groupKey={date} tasks={grouped[date]} />
         </View>
       ))}
     </View>
@@ -100,6 +86,7 @@ export default function GroupedTasksView({ tasks }: GroupedTasksViewProps) {
 const stylesTable = StyleSheet.create({
   table: {
     paddingRight: 12,
+    paddingBottom: 10,
     overflow: 'hidden',
     width: '100%',
   },
@@ -117,6 +104,13 @@ const stylesTable = StyleSheet.create({
   header: {
     fontWeight: 'bold',
   },
+  cellGroupData: {
+    padding: 5,
+    width: 100,
+    fontSize: 14,
+    color: '#333',
+    backgroundColor: '#fffa92'
+  },
   cellId: {
     padding: 5,
     width: 30,
@@ -124,19 +118,20 @@ const stylesTable = StyleSheet.create({
     color: '#333',
   },
   cellStatus: {
-    padding: 10,
-    width: 40,
+    padding: 5,
+    paddingLeft: 15,
+    width: 60,
     fontSize: 16,
     color: '#333',
   },
   cellTime: {
-    padding: 10,
+    padding: 5,
     width: 60,
     fontSize: 14,
     color: '#333',
   },
   cellDescription: {
-    padding: 0,
+    padding: 5,
     minWidth: 80,
     fontSize: 14,
     color: '#333',
@@ -144,7 +139,6 @@ const stylesTable = StyleSheet.create({
   },
   tableDetails: {
     paddingLeft: 12,
-    paddingBottom: 10,
     borderBottomWidth: 1,
     borderColor: '#ddd',
   },
@@ -152,6 +146,7 @@ const stylesTable = StyleSheet.create({
     flexDirection: 'row',
     borderColor: '#ddd',
     alignItems: "flex-start",
+    paddingTop: 5
   },
   headerDetails: {
     fontWeight: 'bold',
@@ -171,13 +166,14 @@ const stylesTable = StyleSheet.create({
 
 const styles = StyleSheet.create({
   container: {
-    paddingBottom: 24,
+    paddingTop: 10,
+    paddingBottom: 10,
   },
-  dateTitle: {
-    fontWeight: 'bold',
+  initialText: {
     fontSize: 16,
-    marginTop: 26,
-    marginBottom: 4,
-  },
+    marginBottom: 0,
+    paddingBottom: 0
+  }
+
 });
 

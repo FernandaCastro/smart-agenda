@@ -1,7 +1,7 @@
 import axios from 'axios';
 import dayjs from 'dayjs';
-import { AIDescriptionResponse, AITaskResponse } from '../models/openai.models';
-import { AppError } from '../models/error.models';
+import { AIDescriptionResponse, AITaskResponse } from '../models/openai.models.js';
+import { AppError } from '../models/error.models.js';
 
 export async function analyseText(text: string) {
 

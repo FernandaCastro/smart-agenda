@@ -5,8 +5,6 @@ import dayjs from 'dayjs';
 import { AppError } from '../models/error.models.js';
 import { AITaskResponse } from '../models/openai.models.js';
 
-import { db } from "../database.js";
-
 let tasks: Task[] = [
   {
     id: 1,
@@ -33,47 +31,6 @@ let tasks: Task[] = [
     status: "pending"
   }
 ]
-
-async function listTasks(criteria?: Task | null, aiTaskResponse?: AITaskResponse): Promise<Task[]> {
-
-  const taskCollection = db.collection<Task>("tasks");
-  const filter: any = {};
-
-  if (criteria) {
-    if (criteria.id && criteria.id > 0) {
-      filter.id = criteria.id;
-    }
-    if (criteria.description) {
-      filter.description = { $regex: criteria.description, $options: "i" };
-    }
-    if (criteria.notes) {
-      filter.notes = { $regex: criteria.notes, $options: "i" };
-    }
-    if (criteria.status) {
-      filter.status = criteria.status;
-    }
-    if (criteria.date) {
-      filter.date = criteria.date;
-    }
-    if (criteria.time) {
-      filter.time = criteria.time;
-    }
-  }
-
-  if (aiTaskResponse?.start || aiTaskResponse?.end) {
-    filter.date = filter.date || {};
-    if (aiTaskResponse.start) {
-      filter.date.$gte = aiTaskResponse.start;
-    }
-    if (aiTaskResponse.end) {
-      filter.date.$lte = aiTaskResponse.end;
-    }
-  }
-
-  const _tasks = await taskCollection.find(filter).toArray();
-  return _tasks;
-
-}
 
 function filter(source: Task[], criteria?: Task | null, aiTaskResponse?: AITaskResponse): Task[] {
   if (!criteria && !aiTaskResponse) return source;
@@ -187,14 +144,12 @@ export async function process(text: string) {
       notes: null,
       status: null
     }
-    //filteredTasks = filter(filteredTasks, criteria);
-    const filteredTasks = await listTasks(criteria);
+    filteredTasks = filter(filteredTasks, criteria);
   }
 
   //Filter by period of time
   if (!aiTaskResponse.task.id  && (aiTaskResponse.start || aiTaskResponse.end)) {
-    //filteredTasks = filter(filteredTasks, null, aiTaskResponse);
-    filteredTasks = await listTasks(null, aiTaskResponse);
+    filteredTasks = filter(filteredTasks, null, aiTaskResponse);
   }
 
   //Filter by "description", if "id" not informed
@@ -218,8 +173,7 @@ export async function process(text: string) {
   if (aiTaskResponse.intention === INTENTIONS.RETRIEVE) {
 
     //Filter: consider description
-    //const _tasks = filter(filteredTasks, aiTaskResponse.task);
-    const _tasks = listTasks(aiTaskResponse.task);
+    const _tasks = filter(filteredTasks, aiTaskResponse.task);
     const taskResponse = new TaskResponse(INTENTIONS.RETRIEVE, _tasks);
     return taskResponse;
   }

@@ -1,4 +1,4 @@
-import { Intention, STATUS, Status } from "./constants";
+import { Intention, STATUS, Status } from "./constants.js";
 
 export interface Task {
   id: number;

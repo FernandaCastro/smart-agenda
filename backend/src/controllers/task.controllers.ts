@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { process } from '../services/task.services';
-import { AppError } from '../models/error.models';
+import { process } from '../services/task.services.js';
+import { AppError } from '../models/error.models.js';
 
 // export const listTasks = (_req: Request, res: Response) => {
 //   const tasks = list();

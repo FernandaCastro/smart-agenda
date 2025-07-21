@@ -1,12 +1,10 @@
-import { getStatusIcon } from "./constants";
 
 export type Task = {
   id: number;
   description: string;
-  date: string | '';
-  time: string | '';
+  datetime?: Date | null;
   notes: string | null;
-  status: 'pendente' | 'resolvido' | 'cancelado';
+  status: 'pending' | 'resolved' | 'cancelled';
 };
 
 export type TaskResponse = {

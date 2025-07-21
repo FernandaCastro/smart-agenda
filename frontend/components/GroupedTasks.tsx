@@ -5,6 +5,7 @@ import { Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import MiniButton from "./MiniButton";
 import { useState } from "react";
 import Markdown from 'react-native-markdown-display';
+import dayjs from "dayjs";
 
 type PropsTableDetails = {
   task: Task;
@@ -46,7 +47,7 @@ function TaskTable({ groupKey, tasks }: PropsTable) {
       <View style={stylesTable.headerRow}>
         <Text style={[stylesTable.cellGroupData, stylesTable.header]}>{groupKey}</Text>
         <Text style={[stylesTable.cellTime, stylesTable.header]}>Time</Text>
-        <Text style={[stylesTable.cellId, stylesTable.header]}>#</Text>
+        {/* <Text style={[stylesTable.cellId, stylesTable.header]}>#</Text> */}
         <Text style={[stylesTable.cellDescription, stylesTable.header]}>Description</Text>
       </View>
 
@@ -55,8 +56,8 @@ function TaskTable({ groupKey, tasks }: PropsTable) {
           <View style={stylesTable.row}>
             <MiniButton icon="more-vert" onPress={() => showDetail !==  task.id  ? setShowDetail(task.id) : setShowDetail(0)} />
             <Text style={stylesTable.cellStatus}>{getStatusIcon(task.status)}</Text>
-            <Text style={stylesTable.cellTime}>{task.time ?? '—'}</Text>
-            <Text style={stylesTable.cellId}>{task.id}</Text>
+            <Text style={stylesTable.cellTime}>{dayjs(task.datetime).format('HH:mm') ?? '—'}</Text>
+            {/* <Text style={stylesTable.cellId}>{task.id}</Text> */}
             <Text style={stylesTable.cellDescription} numberOfLines={2} ellipsizeMode="tail">{task.description}</Text>
           </View>
           {<TaskDetails show={showDetail} task={task} />}

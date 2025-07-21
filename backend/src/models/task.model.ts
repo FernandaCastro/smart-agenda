@@ -1,12 +1,11 @@
-import { Intention, STATUS, Status } from "./constants.js";
+import { Intention, Status } from "./constants.js";
 
 export interface Task {
-  id: number;
+  id: string;
   description: string;
-  date: string | null;
-  time: string | null;
-  notes: string | null;
-  status: Status | null;
+  datetime?: Date | null;
+  notes?: string | null;
+  status?: Status | null;
 }
 
 export class TaskResponse {
@@ -24,3 +23,5 @@ export class TaskResponse {
   }
 
 }
+
+

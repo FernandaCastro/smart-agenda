@@ -1,39 +1,35 @@
-import { Intention } from "./constants";
-import { AppError } from "./error.models";
-import { Task } from "./task.models";
+import { Intention } from "../task/task.constant.js";
+import { AppError } from "../error/error.model.js";
+import { ITask } from "../task/task.model.js";
 
-export interface AITaskResponse {
+export interface AIResponse {
     intention: Intention;
-    newDescription: string | null;
-    start: string | null;
-    end: string | null;
+    start: Date | null;
+    end: Date | null;
     error: AppError | null,
-    task: Task;
+    task: ITask;
+    updateTask: ITask;
 }
 
-export interface AIDescriptionResponse {
-    description: string;
-}
-
-export class AITaskResponse {
+export class AIResponse {
 
     constructor(
         public intention: Intention,
-        public newDescription: string | null,
-        public start: string | null,
-        public end: string | null,
+        public start: Date | null,
+        public end: Date | null,
         public error: AppError | null,
-        public task: Task,
+        public task: ITask,
+        public updateTask: ITask,
     ) { }
 
     toJSON() {
         return {
             intention: this.intention,
-            newDescription: this.newDescription,
             start: this.start,
             end: this.end,
             error: this.error,
             task: this.task,
+            updateTask: this.updateTask,
         };
     }
 

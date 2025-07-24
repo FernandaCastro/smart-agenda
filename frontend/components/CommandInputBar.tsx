@@ -145,7 +145,7 @@ export default function CommandInputBar() {
 
     const extractReply = (taskResponse: TaskResponse) => {
 
-        if (!taskResponse || !taskResponse.tasks || taskResponse.tasks.length === 0) {
+        if (!taskResponse || !taskResponse.tasks || (taskResponse.intention === 'retrieve' && taskResponse.tasks.length === 0)) {
             throw { message: 'No task found!' }
         }
 
@@ -169,19 +169,21 @@ export default function CommandInputBar() {
         }
 
 
+        let content: string | JSX.Element = intentionMessage;
+
         if (taskResponse.tasks.length > 0) {
 
-            const tasksView = <GroupedTasksView initialText={intentionMessage} tasks={taskResponse.tasks} />;
-            const reply: Message = {
-                id: uuidv4(),
-                type: 'task',
-                content: tasksView
-            };
+            content = <GroupedTasksView initialText={intentionMessage} tasks={taskResponse.tasks} />;
 
-            return reply;
         }
 
-        throw { message: 'Unexpected error occured!' }
+        const reply: Message = {
+            id: uuidv4(),
+            type: 'task',
+            content: content
+        };
+
+        return reply;
 
     }
 

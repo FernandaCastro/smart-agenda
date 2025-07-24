@@ -3,7 +3,7 @@ import api from './api';
 export const translateTextToTask = async (text: string) => {
 
     try {
-        const res = await api.post('/tasks/analyse', JSON.stringify({ "text": text }));
+        const res = await api.post('/analyse', JSON.stringify({ "text": text }));
         return res.data;
         
     } catch (error: any) {

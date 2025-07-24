@@ -7,7 +7,6 @@ import {
   Platform,
 } from 'react-native';
 import ChatMessage from '@/components/ChatMessage';
-import InputBar from '@/components/InputBar';
 import { useMessageStore } from '@/stores/useMessageStore';
 import CommandInputBar from '@/components/CommandInputBar';
 

@@ -25,6 +25,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#25292e',
+        borderRadius: 10,
     },
     button: {
         borderRadius: 10,
@@ -33,12 +34,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         borderWidth: 2,
         borderColor: '#43ccbc',
-        padding: 9
+        padding: 9,
     },
     buttonIcon: {
         color: '#43ccbc',
     },
     buttonLabel: {
+        marginLeft: 5,
         color: '#43ccbc',
         fontSize: 14,
     },

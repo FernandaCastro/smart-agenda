@@ -1,6 +1,6 @@
 
 export type Task = {
-  id: number;
+  taskId: string;
   description: string;
   datetime?: Date | null;
   notes: string | null;

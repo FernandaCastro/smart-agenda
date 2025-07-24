@@ -1,14 +1,14 @@
-import { Intention } from "./constants.js";
-import { AppError } from "./error.model.js";
-import { Task } from "./task.model.js";
+import { Intention } from "../task/task.constant.js";
+import { AppError } from "../error/error.model.js";
+import { ITask } from "../task/task.model.js";
 
 export interface AIResponse {
     intention: Intention;
     start: Date | null;
     end: Date | null;
     error: AppError | null,
-    task: Task;
-    updateTask: Task;
+    task: ITask;
+    updateTask: ITask;
 }
 
 export class AIResponse {
@@ -18,8 +18,8 @@ export class AIResponse {
         public start: Date | null,
         public end: Date | null,
         public error: AppError | null,
-        public task: Task,
-        public updateTask: Task,
+        public task: ITask,
+        public updateTask: ITask,
     ) { }
 
     toJSON() {

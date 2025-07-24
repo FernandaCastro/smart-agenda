@@ -1,5 +1,5 @@
-import { AppError } from "../models/error.model.js";
-import { AIResponse } from "../models/ai.model.js";
+import { AppError } from "../error/error.model.js";
+import { AIResponse } from "./ai.model.js";
 import { analyseText, lookupDescription } from "./openai.service.js";
 
 

@@ -7,30 +7,22 @@ type Props = {
 };
 
 export default function MiniButton({ icon, onPress }: Props) {
-    
+
     return (
-        <View style={ styles.buttonContainer}>
-            <Pressable style={styles.button} onPress={onPress}>
-                <MaterialIcons style={styles.buttonIcon} name={icon} size={20}/>
+        <View>
+            <Pressable style={styles.miniButton} onPress={onPress}>
+                <MaterialIcons style={styles.miniButtonIcon} name={icon} size={20} />
             </Pressable>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    buttonContainer: {
-        marginHorizontal: 10,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    button: {
-        borderRadius:8,
-        alignItems: 'center',
-        justifyContent: 'center',
+    miniButton: {
+        borderRadius: 8,
         flexDirection: 'row',
-        padding: 2
     },
-    buttonIcon: {
+    miniButtonIcon: {
         color: '#43ccbc',
     },
 });

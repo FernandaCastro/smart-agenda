@@ -1,11 +1,14 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Alert } from "react-native";
-import { loginUser, signupUser } from "../services/auth.service";
-import { User } from "@/models/userMOdel";
+import { Alert, Platform } from "react-native";
+import { getSession, loginUser, signupUser } from "../services/auth.service";
+import { User } from "@/models/userModel.js";
+import Keychain from "react-native-keychain";
+import { authStorage } from "@/stores/authStore";
 
 interface AuthContextType {
   user: User | null;
+  userEmail: string | null;
   token: string | null;
   login: (user: User) => Promise<void>;
   signup: (user: User) => Promise<void>;
@@ -17,52 +20,81 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadToken = async () => {
-      const savedToken = await AsyncStorage.getItem("token");
-      if (savedToken) {
-        setToken(savedToken);
+    const loadSession = async () => {
+      if (Platform.OS === 'web') {
+        const _user = await getSession();
+        setUser(_user);
+        setLoading(false);
+        return;
       }
+      const savedToken = await authStorage.getAccessToken();
+      const savedEmail = await authStorage.getEmail();
+      if (savedToken) setAccessToken(savedToken);
+      if (savedEmail) setUserEmail(savedEmail);
       setLoading(false);
     };
-    loadToken();
+    loadSession();
   }, []);
 
   const login = async (_user: User) => {
     try {
-      const { token, loggedUser } = await loginUser(_user);
-      setToken(token);
-      setUser(loggedUser);
-      await AsyncStorage.setItem("token", token);
-      await AsyncStorage.setItem("user", loggedUser);
+      const res = await loginUser(_user);
+
+      if (Platform.OS !== 'web') {
+        await authStorage.saveCredentials(res.publicUser.email, res.accessToken);
+        await authStorage.saveRefreshToken(res.refreshToken);
+        setAccessToken(accessToken);
+      }
+
+      setUser(res.publicUser);
+      setUserEmail(res.publicUser.email);
+
     } catch (err: any) {
-      Alert.alert("Login failed", err.message || "Something went wrong.");
+      console.error("Login error:", err);
+      throw err;
     }
   };
 
   const signup = async (_user: User) => {
     try {
-      const { token, user } = await signupUser(_user);
-      setToken(token);
-      setUser({ id: "1", name: "dummy", email: "dummy@user.com" });
-      await AsyncStorage.setItem("token", token);
+      const res = await signupUser(_user);
+
+      if (Platform.OS !== 'web') {
+        await authStorage.saveCredentials(res.publicUser.email, res.accessToken);
+        await authStorage.saveRefreshToken(res.refreshToken);
+
+        setAccessToken(accessToken);
+      }
+
+      setUser(res.publicUser);
+      setUserEmail(res.publicUser.email);
+
     } catch (err: any) {
+      console.error("Signup error:", err);
       Alert.alert("Signup failed", err.message || "Something went wrong.");
     }
   };
 
   const logout = async () => {
-    setToken(null);
+
+    if (Platform.OS !== 'web') {
+      await authStorage.clearCredentials();
+      await authStorage.clearRefreshToken();
+    }
+    setAccessToken(null);
     setUser(null);
-    await AsyncStorage.removeItem("token");
+    setUserEmail(null);
+
     console.log("User logged out successfully");
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, signup, logout, loading }}>
+    <AuthContext.Provider value={{ user, userEmail, token: accessToken, login, signup, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

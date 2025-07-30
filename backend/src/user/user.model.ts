@@ -3,6 +3,8 @@ export interface IUser {
   email: string;
   name: string;
   password: string;
+  refreshToken?: string;
+  expiresAt?: Date;
 }
 
 export type PublicUser ={
@@ -18,14 +20,16 @@ export class UserDTO implements IUser {
     public email: string,
     public name: string,
     public password: string,
+    public refreshToken?: string,
+    public expiresAt?: Date
   ) { }
 
   toJSON() {
     return {
       id: this.id,
+      name: this.name,
       email: this.email,
       password: this.password,
-      name: this.name,
     };
   }
 

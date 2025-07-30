@@ -5,6 +5,8 @@ export interface UserDocument extends Document {
   email: string;
   password: string;
   name: string;
+  refreshToken?: string;
+  expiresAt: Date,
   comparePassword(candidate: string): Promise<boolean>;
 }
 
@@ -13,6 +15,8 @@ const userSchema = new Schema<UserDocument>(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     name: { type: String, required: true},
+    refreshToken: { type: String, default: null },
+    expiresAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

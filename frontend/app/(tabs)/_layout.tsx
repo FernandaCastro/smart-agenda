@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import { useAuth } from "@/context/AuthContext";
-import { User } from "@/models/userMOdel";
+import { User } from "@/models/userModel.js";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, Tabs } from "expo-router";
 import { ActivityIndicator, Text, View } from "react-native";

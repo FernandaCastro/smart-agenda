@@ -21,6 +21,7 @@ export default function SignupScreen() {
                 password: password,
             }
             await signup(user);
+            console.log("New user created!");
 
             router.replace("/(tabs)");
         } catch (error: any) {

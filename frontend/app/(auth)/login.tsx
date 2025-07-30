@@ -9,20 +9,25 @@ import IconButton from "@/components/IconButton";
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login } = useAuth();
+  const { user, login } = useAuth();
   const router = useRouter();
 
   const handleLogin = async () => {
     try {
-      const user = {
+      const _user = {
         email: email,
         password: password,
       }
-      await login(user);
+
+      await login(_user);
+
+      console.log("User logged in!");
       router.push("/(tabs)");
-      
+
     } catch (error: any) {
-      Alert.alert("Erro", error.message || "Falha no login.");
+      console.log("Login error:", error);
+      Alert.alert("Login failed", error.message || "Login failed.");
+
     }
   };
 
@@ -55,7 +60,7 @@ export default function LoginScreen() {
           Não tem uma conta? Cadastre-se
         </Text>
       </View>
-      <Footer/>
+      <Footer />
     </View>
   )
 }

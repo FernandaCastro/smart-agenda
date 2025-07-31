@@ -9,20 +9,25 @@ import IconButton from "@/components/IconButton";
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login } = useAuth();
+  const { user, login } = useAuth();
   const router = useRouter();
 
   const handleLogin = async () => {
     try {
-      const user = {
+      const _user = {
         email: email,
         password: password,
       }
-      await login(user);
+
+      await login(_user);
+
+      console.log("User logged in!");
       router.push("/(tabs)");
-      
+
     } catch (error: any) {
-      Alert.alert("Erro", error.message || "Falha no login.");
+      console.log("Login error:", error);
+      Alert.alert("Login failed", error.message || "Login failed.");
+
     }
   };
 
@@ -42,20 +47,20 @@ export default function LoginScreen() {
         />
 
         <TextInput
-          placeholder="Senha"
+          placeholder="Password"
           style={styles.input}
           secureTextEntry
           value={password}
           onChangeText={setPassword}
         />
 
-        <IconButton icon="login" label="Entrar" onPress={handleLogin} />
+        <IconButton icon="login" label="Login" onPress={handleLogin} />
 
         <Text style={styles.link} onPress={() => router.push("/(auth)/signup")}>
-          Não tem uma conta? Cadastre-se
+          Are you new here?  Sign-up
         </Text>
       </View>
-      <Footer/>
+      <Footer />
     </View>
   )
 }
@@ -79,6 +84,7 @@ const styles = StyleSheet.create({
   },
 
   input: {
+    minWidth: "40%",
     borderWidth: 1,
     borderColor: "#ccc",
     marginBottom: 12,

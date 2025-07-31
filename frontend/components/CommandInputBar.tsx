@@ -249,18 +249,19 @@ export default function CommandInputBar() {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
         padding: 8,
         flexDirection: 'row',
         justifyContent: 'center',
-        backgroundColor: '#25292e',
+        backgroundColor: '#25292e',  
     },
     input: {
-        width: '100%',
-        padding: 15,
+        flex: 1,
+        height: 48,
+        paddingHorizontal: 12,
         borderColor: '#ccc',
         borderWidth: 1,
         borderRadius: 8,
-        color: '#ccc'
+        color: '#ccc',
+        marginRight: 8,
     },
 });

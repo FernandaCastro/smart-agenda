@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import { useAuth } from "@/context/AuthContext";
-import { User } from "@/models/userMOdel";
+import { User } from "@/models/userModel.js";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, Tabs } from "expo-router";
 import { ActivityIndicator, Text, View } from "react-native";
@@ -44,7 +44,7 @@ export default function TabLayout() {
                 name="about"
                 options={{
                     title: 'About',
-                    headerTitle: () => (<Header/>),
+                    header: () => (<Header/>),
                     tabBarIcon: ({ color, focused }) => (
                         <Ionicons name={focused ? 'information-circle-sharp' : 'information-circle-outline'} color={color} size={24} />
                     )

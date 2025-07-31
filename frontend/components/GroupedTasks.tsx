@@ -107,9 +107,9 @@ const stylesTable = StyleSheet.create({
   },
   cellGroupData: {
     minWidth: 80,
-    fontSize: 14,
-    color: '#333',
-    backgroundColor: '#fffa92'
+    fontSize: 15,
+    color: '#54B7AC', //'#333',
+    // backgroundColor: '#fffa92',
   },
   cellId: {
     paddingTop: 5,

@@ -92,7 +92,7 @@ PORT=3000
 📈 Roadmap
  - [X] Integrate to OpenAI
       
- - [ ] Store tasks in a database
+ - [X] Store tasks in a database
 
  - [ ] Implement user authentication
 

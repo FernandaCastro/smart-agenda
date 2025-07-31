@@ -55,6 +55,7 @@ smart-agenda/
 - Node.js ≥ 18
 - Expo CLI
 - npm or yarn
+- AndroidStudio (optional)
 
 ### Installation
 
@@ -76,8 +77,8 @@ npm run dev
 cd frontend
 cp .env.example .env # Add your your IP to it
 npm install
-npm start
-//or npx expo start
+npx expo start
+//or npx expo run:android
 ```
 
 ### ⚙️ Environment Variables
@@ -92,9 +93,9 @@ PORT=3000
 📈 Roadmap
  - [X] Integrate to OpenAI
       
- - [ ] Store tasks in a database
+ - [X] Store tasks in a database
 
- - [ ] Implement user authentication
+ - [X] Implement user authentication
 
  - [ ] Add notification/reminder support
 

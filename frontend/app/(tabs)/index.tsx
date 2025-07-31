@@ -49,10 +49,9 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
   },
   list: {
-    padding: 16,
-    paddingBottom: 12
-  },
+    paddingHorizontal: 12,
+    paddingBottom: 20,},
 });

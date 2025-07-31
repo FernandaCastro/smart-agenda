@@ -59,6 +59,17 @@ export async function processRefreshToken(refreshToken: string): Promise<{newAcc
     }
 }
 
+export async function processLogout(user: PublicUser){
+    if (!user || !user.email) throw new AppError(400, 'User is not present.');
+
+    const stored = await findOne({ email: user.email });
+    if (!stored) throw new AppError(404, 'User not found');
+
+    // Clear refresh token in DB
+    const tokenSaved = saveRefreshTokenDB(stored.id, '', new Date());
+    if (!tokenSaved) throw new AppError(500, "Failed to clear refresh token");
+}
+
 const generateAccessToken = (payload: PublicUser) => {
     return jwt.sign(payload, ACCESS_SECRET, { expiresIn: ACCESS_EXPIRES_IN });
 };
@@ -68,8 +79,12 @@ const generateRefreshToken = (payload: PublicUser) => {
 };
 
 async function validateRefreshToken(token: string): Promise<PublicUser> {
-    const payload = jwt.verify(token, REFRESH_SECRET) as PublicUser;
-    const stored = await findOne({ email: payload.email });
+    const payload = jwt.verify(token, REFRESH_SECRET);
+    
+    if (payload && typeof payload !== 'object') 
+        throw new AppError(403, 'Invalid refresh token');
+    
+    const stored = await findOne({ email: (payload as PublicUser).email });
 
     if (!stored || !stored.expiresAt || stored.expiresAt < new Date())
         throw new AppError(403, 'Invalid refresh token');

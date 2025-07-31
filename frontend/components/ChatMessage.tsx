@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     marginVertical: 4,
     padding: 10,
     borderRadius: 20,
-    maxWidth: '98%',
+    maxWidth: '95%',
     alignSelf: 'flex-start',
   },
   embedded: {
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   task: {
-    backgroundColor: '#FFF9C4',
+    backgroundColor: '#FAFAF8',//'#FFF9C4',
     alignSelf: 'flex-start',
   },
   error: {

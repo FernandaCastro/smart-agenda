@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import { AppError } from "../error/error.model.js";
-import { processLogin, processRefreshToken, processSignup } from "./auth.service.js";
+import { processLogin, processLogout, processRefreshToken, processSignup } from "./auth.service.js";
 import {AuthenticatedRequest} from "./auth.middleware.js";
+
+const isSecure = false; // Set to true in production
 
 export const signup = async (req: Request, res: Response) => {
 
@@ -41,7 +43,7 @@ export const login = async (req: Request, res: Response) => {
     res.cookie('refreshToken', generateRefreshCookie(refreshToken));
 
     //To mobile only
-    res.status(200).json({ publicUser });
+    res.status(200).json({ publicUser, accessToken, refreshToken });
 
   } catch (error) {
     console.error('Error logging in:', error);
@@ -84,7 +86,9 @@ export const refreshToken = async (req: Request, res: Response) => {
       return res.status(appError.statusCode).json(appError);
     }
 
-    res.status(500).json('RefreshToken failed');
+    res.clearCookie('accessToken', generateClearCookie());
+    res.clearCookie('refreshToken', generateClearCookie());
+    res.status(500).json('RefreshToken failed. Please login again.');
   }
 
 }
@@ -101,10 +105,39 @@ export const getSession = async (req: AuthenticatedRequest, res: Response) => {
   return res.status(200).json({ publicUser });
 };
 
+export const logout = async (req: Request, res: Response) => {
+
+  if (!req.body || !req.body.user) throw new AppError(400, 'User is not present.');
+
+  try {
+
+    await processLogout(req.body.user);
+
+    res.clearCookie('accessToken', generateClearCookie());
+  
+    res.clearCookie('refreshToken', generateClearCookie());
+
+    res.status(200).json({ message: 'User logged out successfully' });
+
+  } catch (error) {
+    
+    console.error('Error logging out:', error);
+
+    if (error instanceof AppError) {
+      const appError = (error as AppError);
+      res.statusMessage = appError.message;
+      return res.status(appError.statusCode).json(appError);
+    }
+
+    res.status(500).json('Logout failed');
+  }
+
+}
+
 function generateAccessCookie(accessToken: string): {} {
   return {
     httpOnly: true,
-    secure: false, // Set to true in production
+    secure: isSecure, 
     sameSite: 'strict',
     maxAge: 15 * 60 * 1000, // 15 minutes
     value: accessToken,
@@ -114,9 +147,19 @@ function generateAccessCookie(accessToken: string): {} {
 function generateRefreshCookie(refreshToken: string): {} {
   return {
     httpOnly: true,
-    secure: false, // Set to true in production
+    secure: isSecure, 
     sameSite: 'strict',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     value: refreshToken,
+  };
+}
+
+function generateClearCookie(): {} {
+  return {
+    httpOnly: true,
+    secure: isSecure, 
+    sameSite: 'strict',
+    maxAge: 0, // Clear cookie
+    value: '',
   };
 }

@@ -53,7 +53,7 @@ Exemplo: Alterar a nota da tarefa 4: \"Bolo redondo de \\*\\*abacaxi com doce de
 `;
 
     return (
-        <ScrollView>
+        <ScrollView style={{flex: 1}}>
             <Markdown style={{
                 body: {
                     color: '#333',
@@ -125,3 +125,4 @@ Exemplo: Alterar a nota da tarefa 4: \"Bolo redondo de \\*\\*abacaxi com doce de
         </ScrollView>
     )
 }
+

@@ -5,6 +5,7 @@ type MessageState = {
     messages: Message[];
     addMessage: (msg: Message) => void;
     updateMessage: (id: string, newContent: string, newType?: Message['type']) => void;
+    clearMessages: () => void; 
 };
 
 export const useMessageStore = create<MessageState>((set) => ({
@@ -19,5 +20,6 @@ export const useMessageStore = create<MessageState>((set) => ({
                 m.id === id ? { ...m, content: newContent, type: newType || m.type } : m
             ),
         })),
+    clearMessages: () => set(() => ({ messages: []  })),
 }));
 

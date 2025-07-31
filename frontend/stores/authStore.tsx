@@ -3,14 +3,13 @@ import { Platform } from 'react-native';
 
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
-const EMAIL_KEY = 'email';
 
 export const authStorage = {
   // Save email and access token securely (mobile only)
-  async saveCredentials(email: string, token: string) {
+  async saveCredentials(user: any, accessToken: string) {
     if (Platform.OS === 'web') return;
 
-    const result = await Keychain.setGenericPassword(email, token, {service: ACCESS_TOKEN_KEY});
+    const result = await Keychain.setGenericPassword(JSON.stringify(user), accessToken, {service: ACCESS_TOKEN_KEY});
     if (!result) throw new Error('Failed to save credentials');
   },
 
@@ -27,12 +26,12 @@ export const authStorage = {
     }
   },
 
-  async getEmail(): Promise<string | null> {
+  async getUser(): Promise<any | null> {
     if (Platform.OS === 'web') return null;
 
     try {
       const credentials = await Keychain.getGenericPassword({ service: ACCESS_TOKEN_KEY });
-      return credentials ? credentials.username : null;
+      return credentials ? JSON.parse(credentials.username) : null;
 
     } catch (error) {
       console.error('Error accessing Email Keychain:', error);
@@ -74,26 +73,5 @@ export const authStorage = {
     if (Platform.OS === 'web') return;
     const result = await Keychain.resetGenericPassword({ service: REFRESH_TOKEN_KEY });
     if (!result) throw new Error('Failed to clear refresh token');
-  },
-
-  // Save email separately (optional, e.g. for pre-filling forms)
-  async saveEmail(email: string) {
-    if (Platform.OS === 'web') return;
-    const result = await Keychain.setGenericPassword(EMAIL_KEY, email, {
-      service: EMAIL_KEY,
-    });
-    if (!result) throw new Error('Failed to save email credential');
-  },
-
-  async loadEmail(): Promise<string | null> {
-    if (Platform.OS === 'web') return null;
-    const credentials = await Keychain.getGenericPassword({ service: EMAIL_KEY });
-    return credentials ? credentials.password : null;
-  },
-
-  async clearEmail() {
-    if (Platform.OS === 'web') return;
-    const result = await Keychain.resetGenericPassword({ service: EMAIL_KEY });
-    if (!result) throw new Error('Failed to clear email credential');
   },
 };

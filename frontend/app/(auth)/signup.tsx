@@ -5,13 +5,15 @@ import { useAuth } from "../../context/AuthContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import IconButton from "@/components/IconButton";
+import { useAlertStore } from "@/stores/useAlertStore";
 
 export default function SignupScreen() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const { signup } = useAuth();
+    const { user, signup } = useAuth();
     const router = useRouter();
+    const { addAlert } = useAlertStore();
 
     const handleSignup = async () => {
         try {
@@ -21,11 +23,15 @@ export default function SignupScreen() {
                 password: password,
             }
             await signup(user);
-            console.log("New user created!");
 
-            router.replace("/(tabs)");
+            console.log("New user created!");
+            addAlert(`${user.name}, your account has been created successfully! Please log in.`);
+
+            router.replace("/(auth)/login");
+
         } catch (error: any) {
-            Alert.alert("Erro", error.message || "Falha ao cadastrar.");
+            console.error("Error during signup:", error);
+            addAlert( error.message || "An error occurred during signup.");
         }
     };
 
@@ -33,7 +39,7 @@ export default function SignupScreen() {
         <View style={styles.container}>
             <Header />
             <View style={styles.signupContainer}>
-                <Text style={styles.title}>Criar Conta</Text>
+                <Text style={styles.title}>New Account</Text>
                 <TextInput
                     placeholder="Name"
                     style={styles.input}
@@ -59,10 +65,10 @@ export default function SignupScreen() {
                     onChangeText={setPassword}
                 />
 
-                <IconButton icon="save-alt" label="Cadastrar" onPress={handleSignup} />
+                <IconButton icon="save-alt" label="Sign up" onPress={handleSignup} />
 
                 <Text style={styles.link} onPress={() => router.push("/(auth)/login")}>
-                    Já tem uma conta? Faça login
+                    Already have an account? Log in.
                 </Text>
             </View>
             <Footer />
@@ -82,6 +88,7 @@ const styles = StyleSheet.create({
     },
     title: { fontSize: 24, marginBottom: 20, textAlign: "center" },
     input: {
+        minWidth: "50%",
         borderWidth: 1,
         borderColor: "#ccc",
         marginBottom: 12,

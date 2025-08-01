@@ -1,13 +1,12 @@
 import Header from "@/components/Header";
 import { useAuth } from "@/context/AuthContext";
-import { User } from "@/models/userModel.js";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, Tabs } from "expo-router";
 import { ActivityIndicator, Text, View } from "react-native";
 
 
 export default function TabLayout() {
-    const { user, loading } = useAuth();
+    const { accessToken, loading } = useAuth();
 
     if (loading) {
         return (
@@ -19,7 +18,7 @@ export default function TabLayout() {
     }
 
     // not logged in, redirect to login page
-    if (!user) return <Redirect href="/(auth)/login" />;
+    if (!accessToken) return <Redirect href="/(auth)/login" />;
 
     // logged in, show the app
     return (

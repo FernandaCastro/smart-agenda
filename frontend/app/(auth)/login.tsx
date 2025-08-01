@@ -5,12 +5,15 @@ import { useAuth } from "../../context/AuthContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import IconButton from "@/components/IconButton";
+import { useAlertStore } from "@/stores/useAlertStore";
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const { user, login } = useAuth();
+
+  const [email, setEmail] = useState(user?.email || "");
+  const [password, setPassword] = useState("");
   const router = useRouter();
+  const { addAlert } = useAlertStore();
 
   const handleLogin = async () => {
     try {
@@ -22,11 +25,12 @@ export default function LoginScreen() {
       await login(_user);
 
       console.log("User logged in!");
+      addAlert("Welcome back!");
       router.push("/(tabs)");
 
     } catch (error: any) {
       console.log("Login error:", error);
-      Alert.alert("Login failed", error.message || "Login failed.");
+      addAlert(error.message || "An error occurred during login.");
 
     }
   };

@@ -4,6 +4,7 @@ import { getSession, loginUser, logoutUser, signupUser } from "../services/auth.
 import { User } from "@/models/userModel.js";
 import { authStorage } from "@/stores/authStore";
 import { router } from "expo-router";
+import { useAlertStore } from "@/stores/useAlertStore";
 
 interface AuthContextType {
   user: User | null;
@@ -20,6 +21,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { addAlert } = useAlertStore();
 
   useEffect(() => {
     const loadSession = async () => {
@@ -78,34 +80,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (Platform.OS !== 'web') {
         await authStorage.saveCredentials(res.publicUser, res.accessToken);
         await authStorage.saveRefreshToken(res.refreshToken);
-        setAccessToken(accessToken);
+        setAccessToken(res.accessToken);
+        
+      }else{
+        setAccessToken("fake-access-token");
       }
 
       setUser(res.publicUser);
+      addAlert("Welcome back!");
 
     } catch (err: any) {
       console.error("Login error:", err);
-      throw err;
+      addAlert(err.message || "An error occurred during login.");
     }
   };
 
   const signup = async (_user: User) => {
     try {
       const res = await signupUser(_user);
-
-      if (Platform.OS !== 'web') {
-        await authStorage.saveCredentials(res.publicUser, res.accessToken);
-        await authStorage.saveRefreshToken(res.refreshToken);
-
-        setAccessToken(accessToken);
-      }
-
-      setUser(res.publicUser);
+      setUser(res);
+      addAlert(`${res.name}, your account has been created successfully! Please log in.`);
       router.push("/(auth)/login");
 
     } catch (err: any) {
       console.error("Signup error:", err);
-      Alert.alert("Signup failed", err.message || "Something went wrong.");
+      addAlert(err.message || "An error occurred during signup.");
     }
   };
 
@@ -128,14 +127,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
 
       console.log("User logged out successfully");
+      addAlert("You have been logged out successfully.");
+      router.push("/(auth)/login");
 
     } catch (error) {
       console.error("Logout error:", error);
-      Alert.alert("Logout failed", "An error occurred while logging out.");
+      addAlert("An error occurred during logout.");
 
-    } finally {
-      router.push("/(auth)/login");
-    };
+    } 
   }
 
   return (

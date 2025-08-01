@@ -6,27 +6,29 @@ import MiniButton from "./MiniButton";
 
 export default function Header() {
 
-    const { user, logout } = useAuth();
+    const { accessToken, user, logout } = useAuth();
 
     return (
-        <View style={styles.container}>
-            <View style={styles.logoContainer}>
-                <Ionicons name='chatbubble-outline' size={24} style={styles.logoIcon} />
-                <Text style={styles.logoText}>
-                    Smart Agenda
-                </Text>
-            </View>
-            {user &&
-                <View style={styles.userContainer} >
-                    <Ionicons name='person' size={18} style={styles.userIcon} />
-                    <Text style={styles.userText}>
-                        {user?.name}
+        <View>
+            <View style={styles.container}>
+                <View style={styles.logoContainer}>
+                    <Ionicons name='chatbubble-outline' size={24} style={styles.logoIcon} />
+                    <Text style={styles.logoText}>
+                        Smart Agenda
                     </Text>
-                    <MiniButton 
-                        icon="logout"
-                        onPress={logout} />
                 </View>
-            }
+                {accessToken &&
+                    <View style={styles.userContainer} >
+                        <Ionicons name='person' size={18} style={styles.userIcon} />
+                        <Text style={styles.userText}>
+                            {user?.name}
+                        </Text>
+                        <MiniButton
+                            icon="logout"
+                            onPress={logout} />
+                    </View>
+                }
+            </View>
         </View>
     )
 };
@@ -73,6 +75,6 @@ const styles = StyleSheet.create({
         color: 'white',
         marginRight: 20,
         alignSelf: 'flex-end',
-    }
+    },
 
 })

@@ -11,8 +11,8 @@ export const signup = async (req: Request, res: Response) => {
 
     if (!req.body || !req.body.user) throw new AppError(400, 'User is not present.');
 
-    const result = await processSignup(req.body.user);
-    return res.status(200).json(result.toPublicJSON());
+    const publicUser = await processSignup(req.body.user);
+    return res.status(200).json(publicUser);
 
   } catch (error) {
     console.error('Error signing up:', error);

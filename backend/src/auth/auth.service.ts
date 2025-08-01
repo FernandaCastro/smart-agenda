@@ -9,16 +9,25 @@ const REFRESH_SECRET = process.env.REFRESH_SECRET || "refresh_secret";
 const ACCESS_EXPIRES_IN = "15m";
 const REFRESH_EXPIRES_IN = "7d";
 
-export async function processSignup(user: IUser): Promise<UserDTO> {
+export async function processSignup(user: IUser): Promise<PublicUser> {
+    if (!user || !user.name || !user.email || !user.password) {
+        throw new AppError(400, 'User is not present or missing required fields.');
+    }
 
     const existing = await findOne({ email: user.email });
     if (existing) throw new AppError(400, "User already exists");
 
     const newUser = await createDB(user);
-    return newUser;
+    const publicUser = newUser.toPublicJSON() as PublicUser;
+
+    return publicUser;
 }
 
-export async function processLogin(user: IUser): Promise<{publicUser: PublicUser, accessToken: string, refreshToken: string}> {
+export async function processLogin(user: IUser): Promise<{ publicUser: PublicUser, accessToken: string, refreshToken: string }> {
+    
+    if (!user || !user.email || !user.password) {
+        throw new AppError(400, 'User is not present or missing required fields.');
+    }
 
     const userFound = await findOne({ email: user.email });
     if (!userFound) throw new AppError(404, "User not found");
@@ -32,34 +41,34 @@ export async function processLogin(user: IUser): Promise<{publicUser: PublicUser
     const refreshToken = generateRefreshToken(publicUser);
     saveRefreshToken(userFound.id, refreshToken);
 
-    return {publicUser, accessToken, refreshToken};
+    return { publicUser, accessToken, refreshToken };
 }
 
-function saveRefreshToken(userId: string, refreshToken: string){
+function saveRefreshToken(userId: string, refreshToken: string) {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
     const tokenSaved = saveRefreshTokenDB(userId, refreshToken, expiresAt);
     if (!tokenSaved) throw new AppError(500, "Failed to save refresh token");
 }
 
-export async function processRefreshToken(refreshToken: string): Promise<{newAccessToken: string, newRefreshToken: string }> {
+export async function processRefreshToken(refreshToken: string): Promise<{ newAccessToken: string, newRefreshToken: string }> {
 
     const publicUser = await validateRefreshToken(refreshToken);
-       
+
     try {
         //generate new tokens and save the new refresh token in DB
         const newAccessToken = generateAccessToken(publicUser);
         const newRefreshToken = generateRefreshToken(publicUser);
         saveRefreshToken(publicUser.id, newRefreshToken);
 
-        return {newAccessToken, newRefreshToken};
+        return { newAccessToken, newRefreshToken };
 
     } catch {
         throw new AppError(403, 'Token expired');
     }
 }
 
-export async function processLogout(user: PublicUser){
+export async function processLogout(user: PublicUser) {
     if (!user || !user.email) throw new AppError(400, 'User is not present.');
 
     const stored = await findOne({ email: user.email });
@@ -80,10 +89,10 @@ const generateRefreshToken = (payload: PublicUser) => {
 
 async function validateRefreshToken(token: string): Promise<PublicUser> {
     const payload = jwt.verify(token, REFRESH_SECRET);
-    
-    if (payload && typeof payload !== 'object') 
+
+    if (payload && typeof payload !== 'object')
         throw new AppError(403, 'Invalid refresh token');
-    
+
     const stored = await findOne({ email: (payload as PublicUser).email });
 
     if (!stored || !stored.expiresAt || stored.expiresAt < new Date())

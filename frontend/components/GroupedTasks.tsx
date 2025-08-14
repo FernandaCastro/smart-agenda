@@ -58,7 +58,7 @@ function TaskTable({ groupKey, tasks }: PropsTable) {
             <Text style={stylesTable.cellStatus}>{getStatusIcon(task.status)}</Text>
             <Text style={stylesTable.cellTime}>{dayjs(task.datetime).format('HH:mm') ?? '—'}</Text>
             <Text style={stylesTable.cellId}>{task.taskId}</Text>
-            <Text style={stylesTable.cellDescription} numberOfLines={2} ellipsizeMode="tail">{task.description}</Text>
+            <Text style={stylesTable.cellDescription} numberOfLines={2} ellipsizeMode="tail">{task.title}</Text>
           </View>
           {<TaskDetails show={showDetail} task={task} />}
         </View>
@@ -74,9 +74,9 @@ export default function GroupedTasksView({ initialText, tasks }: GroupedTasksVie
 
   return (
     <View style={styles.container}>
+       <Text style={styles.initialText}>{initialText}</Text>
       {sortedDates.map((date) => (
         <View key={"main-" + date}>
-          <Text style={styles.initialText}>{initialText}</Text>
           <TaskTable groupKey={date} tasks={grouped[date]} />
         </View>
       ))}
@@ -108,7 +108,7 @@ const stylesTable = StyleSheet.create({
   cellGroupData: {
     minWidth: 80,
     fontSize: 15,
-    color: '#54B7AC', //'#333',
+    color: '#45A59A', //'#54B7AC', //'#333',
     // backgroundColor: '#fffa92',
   },
   cellId: {
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   initialText: {
     fontSize: 16,
     marginBottom: 0,
-    paddingBottom: 0
+    paddingBottom: 15,
   }
 
 });

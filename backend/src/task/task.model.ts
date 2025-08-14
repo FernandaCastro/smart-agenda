@@ -1,27 +1,32 @@
-import { Types } from "mongoose";
-import { UserDTO } from "../user/user.model.js";
-import { Intention, Status } from "./task.constant.js";
+import { UserDTO } from "../user/user.model";
+import { Status } from "./task.constant";
 
-export interface ITask {
+export type Task = {
   taskId: string;
-  description: string;
+  title: string;
   datetime?: Date | null;
   notes?: string | null;
   status?: Status | null;
   user: string | UserDTO;
 }
 
+export type FilterCriteria = {
+  start?: Date,
+  end?: Date,
+  task : Partial<Task>
+}
+
 export class TaskResponse {
 
   constructor(
-    public intention: Intention,
-    public tasks: ITask[],
+    public action: string,
+    public result: Task[],
   ) { }
 
   toJSON() {
     return {
-      intention: this.intention,
-      tasks: this.tasks,
+      action: this.action,
+      result: this.result,
     };
   }
 

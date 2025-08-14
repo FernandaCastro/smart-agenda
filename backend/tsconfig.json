@@ -1,14 +1,17 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
-    "target": "ES2020",
+    "module": "commonjs",
+    "target": "es2020",
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "baseUrl": "./",
+    "outDir": "./dist",
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "typeRoots": ["./node_modules/@types", ".src/types"],
   },
     "ts-node": {
       "esm": true

@@ -19,8 +19,9 @@ import { Message } from '@/models/messageModel';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import { useMessageStore } from '@/stores/useMessageStore';
-import { TaskResponse } from '@/models/taskModel';
-import { translateTextToTask } from '@/services/taskService';
+import { Task, TaskResponse, isTask, isTaskArray } from '@/models/taskModel';
+import { analyse } from '@/services/taskService';
+import { AppError } from '@/models/errorModel';
 
 export default function CommandInputBar() {
 
@@ -145,36 +146,12 @@ export default function CommandInputBar() {
 
     const extractReply = (taskResponse: TaskResponse) => {
 
-        if (!taskResponse || !taskResponse.tasks || (taskResponse.intention === 'retrieve' && taskResponse.tasks.length === 0)) {
-            throw { message: 'No task found!' }
-        }
 
-        let intentionMessage = '';
-        switch (taskResponse.intention) {
-            case 'create':
-                intentionMessage = 'Task created!\n\n'
-                break;
+        let content: string | JSX.Element = taskResponse.message;
 
-            case 'update':
-                intentionMessage = 'Task updated!\n\n'
-                break;
-
-
-            case 'delete':
-                intentionMessage = 'Task deleted!\n\n'
-                break;
-
-            default:
-                break;
-        }
-
-
-        let content: string | JSX.Element = intentionMessage;
-
-        if (taskResponse.tasks.length > 0) {
-
-            content = <GroupedTasksView initialText={intentionMessage} tasks={taskResponse.tasks} />;
-
+        if (taskResponse.result) {
+            const tasks = isTaskArray(taskResponse.result) ? (taskResponse.result as Task[]) : isTask(taskResponse.result) ? [taskResponse.result as Task] : [];
+            content = <GroupedTasksView initialText={taskResponse.message} tasks={tasks} />;
         }
 
         const reply: Message = {
@@ -209,14 +186,17 @@ export default function CommandInputBar() {
         });
 
         try {
-            const response: TaskResponse = await translateTextToTask(command);
+            const response: TaskResponse = await analyse(command);
             const reply: Message = extractReply(response);
             addMessage(reply);
 
         } catch (e: any) {
             console.log(e);
 
-            const details: string = e.details?.join("\n");
+            const details: string = e.details && typeof e.details === 'string' ? e.details :
+                e.details && typeof e.details === 'object' ? (e.details as AppError).message
+                : undefined;
+
             addMessage({
                 id: uuidv4(),
                 type: 'error',
@@ -252,7 +232,7 @@ const styles = StyleSheet.create({
         padding: 8,
         flexDirection: 'row',
         justifyContent: 'center',
-        backgroundColor: '#25292e',  
+        backgroundColor: '#25292e',
     },
     input: {
         flex: 1,

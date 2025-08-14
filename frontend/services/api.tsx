@@ -10,7 +10,7 @@ const api = axios.create({
   baseURL: Constants.expoConfig?.extra?.API_URL,
   timeout: 50000,
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json; charset=UTF-8',
   },
   withCredentials: isWeb,
 });
@@ -23,6 +23,10 @@ api.interceptors.request.use(async config => {
       config.headers.Authorization = `Bearer ${token}`;
     }
   }
+
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  config.headers['X-Timezone'] = timezone;
+
   return config;
 });
 

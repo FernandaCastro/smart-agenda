@@ -1,10 +1,10 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
-import { STATUS, Status } from './task.constant.js';
-import { UserDocument } from '../user/user.mongoose.js';
+import { STATUS, Status } from './task.constant';
+import { UserDocument } from '../user/user.mongoose';
 
 export interface TaskDocument extends Document {
   taskId: string;
-  description: string;
+  title: string;
   datetime: Date | null;
   notes: string | null;
   status: Status | null;
@@ -13,7 +13,7 @@ export interface TaskDocument extends Document {
 
 const TaskSchema = new Schema<TaskDocument>({
   taskId: { type: String, required: true },
-  description: { type: String, required: true },
+  title: { type: String, required: true },
   datetime: { type: Date, default: null },
   notes: { type: String, default: null },
   status: { type: String, enum: Object.values(STATUS), default: STATUS.PENDING },

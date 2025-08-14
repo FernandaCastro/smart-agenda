@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { AppError } from "../error/error.model.js";
-import { processLogin, processLogout, processRefreshToken, processSignup } from "./auth.service.js";
-import {AuthenticatedRequest} from "./auth.middleware.js";
+import { AppError } from "../error/error.model";
+import { processLogin, processLogout, processRefreshToken, processSignup } from "./auth.service";
+import { AuthenticatedRequest } from "../middlewares/auth.middleware";
 
 const isSecure = false; // Set to true in production
 
@@ -61,12 +61,12 @@ export const login = async (req: Request, res: Response) => {
 
 export const refreshToken = async (req: Request, res: Response) => {
 
-  const refreshToken = req.cookies?.refreshToken;
-  if (!refreshToken) return res.status(401).json({ message: 'No refresh token sent!' });
+  const refreshCookie = req.cookies?.refreshToken;
+  if (!refreshCookie) return res.status(401).json({ message: 'No refresh token sent!' });
 
   try {
 
-    const { newAccessToken, newRefreshToken } = await processRefreshToken(refreshToken);
+    const { newAccessToken, newRefreshToken } = await processRefreshToken(refreshCookie.value);
 
     // accessToken as httpOnly cookie
     res.cookie('accessToken', newAccessToken, generateAccessCookie(newAccessToken));
@@ -114,13 +114,13 @@ export const logout = async (req: Request, res: Response) => {
     await processLogout(req.body.user);
 
     res.clearCookie('accessToken', generateClearCookie());
-  
+
     res.clearCookie('refreshToken', generateClearCookie());
 
     res.status(200).json({ message: 'User logged out successfully' });
 
   } catch (error) {
-    
+
     console.error('Error logging out:', error);
 
     if (error instanceof AppError) {
@@ -137,7 +137,7 @@ export const logout = async (req: Request, res: Response) => {
 function generateAccessCookie(accessToken: string): {} {
   return {
     httpOnly: true,
-    secure: isSecure, 
+    secure: isSecure,
     sameSite: 'strict',
     maxAge: 15 * 60 * 1000, // 15 minutes
     value: accessToken,
@@ -147,7 +147,7 @@ function generateAccessCookie(accessToken: string): {} {
 function generateRefreshCookie(refreshToken: string): {} {
   return {
     httpOnly: true,
-    secure: isSecure, 
+    secure: isSecure,
     sameSite: 'strict',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     value: refreshToken,
@@ -157,7 +157,7 @@ function generateRefreshCookie(refreshToken: string): {} {
 function generateClearCookie(): {} {
   return {
     httpOnly: true,
-    secure: isSecure, 
+    secure: isSecure,
     sameSite: 'strict',
     maxAge: 0, // Clear cookie
     value: '',

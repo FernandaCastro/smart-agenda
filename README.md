@@ -17,10 +17,6 @@ The app is designed to support natural language input, transforming user message
 
 ---
 
-## 🔮 Prompt Design
-The app sends user input to OpenAI's API using a structured system prompt that extracts the user's intention (create, update, delete, retrieve) and transforms it into a normalized task JSON.
-
----
 
 ## 🧪 Tech Stack
 

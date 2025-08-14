@@ -1,11 +1,11 @@
 import api from './api';
 
-export const translateTextToTask = async (text: string) => {
+export const analyse = async (text: string) => {
 
     try {
-        const res = await api.post('/analyse', JSON.stringify({ "text": text }));
+        const res = await api.post('/ai/analyse', JSON.stringify({ "text": text }));
         return res.data;
-        
+
     } catch (error: any) {
         console.log(error.response?.status);
         console.log(error.response?.statusText);

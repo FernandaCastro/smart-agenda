@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from 'jsonwebtoken';
-import { PublicUser } from "../user/user.model.js";
+import { PublicUser } from "../user/user.model";
+import { AppError } from "../error/error.model";
 
 const ACCESS_SECRET = process.env.ACCESS_SECRET || "access_secret";
 
@@ -18,20 +19,20 @@ export function authenticateToken(
 
   const authHeader = req.headers["authorization"];
   if (authHeader && authHeader.startsWith('Bearer ')) {
-     token = authHeader?.split(" ")[1];
+    token = authHeader?.split(" ")[1];
   }
 
   if (!token && req.cookies?.accessToken) {
     token = req.cookies.accessToken;
   }
 
-  if (!token ) return res.status(401).json({ message: "No token provided" });
+  if (!token) throw new AppError(401, "No token provided");
 
   try {
     const decoded = jwt.verify(token, ACCESS_SECRET);
     req.user = decoded as PublicUser;
     next();
   } catch (err) {
-    return res.status(403).json({ message: "Invalid token" });
+    throw new AppError(403, "Invalid token");
   }
 }

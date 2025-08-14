@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   task: {
-    backgroundColor: '#FAFAF8',//'#FFF9C4',
+    backgroundColor: '#E6E6E6',
     alignSelf: 'flex-start',
   },
   error: {

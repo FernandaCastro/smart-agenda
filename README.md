@@ -17,10 +17,6 @@ The app is designed to support natural language input, transforming user message
 
 ---
 
-## 🔮 Prompt Design
-The app sends user input to OpenAI's API using a structured system prompt that extracts the user's intention (create, update, delete, retrieve) and transforms it into a normalized task JSON.
-
----
 
 ## 🧪 Tech Stack
 
@@ -86,18 +82,22 @@ Create a .env file based on .env.example in both frontend/ and backend/ folders 
 
 ---
 
-📈 Roadmap
- - [X] 1st Integration round with OpenAI (API RESTful: Prompt + JSON output)
-      
+📈 Roadmap      
  - [X] Store tasks in a database
 
  - [X] Implement user authentication
 
- - [ ] 2nd Integration round with OpenAI (API RESTful: Function Calling)
-
  - [ ] Add notification/reminder support
 
- - [ ] Improve prompt context handling
+
+| AI Integration Level             | Description                                                                | Status            |
+|:------------------|:---------------------------------------------------------------------------|:--------------------|
+| 0 – Wrapper       | Single call to LLM (prompt ➜ response)                                     | ✔ consolidated      |
+|1 – Tool-calling   | LLM chooses and fills functions                                            | ⚙️ in deployment     |
+|2 – Orchestration  | Think ➜ act ➜ observe cycle with 1–2 tools and small RAM memory            | 🔜 next step        |
+|3 – Full Agent     | Planning, multiple tools, long memory, self-reflection, cost/error control | ⏳ 2–3 sprints away |
+|4 – Multi-Agents   | Delegation between specialized agents, coordination, high-level goals      | optional future     |
+
 
 ---
 

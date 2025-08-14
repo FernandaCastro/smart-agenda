@@ -1,31 +1,119 @@
 import { Response } from 'express';
-import { analyseText } from './task.service.js';
-import { AppError } from '../error/error.model.js';
-import { AuthenticatedRequest } from '../auth/auth.middleware.js';
+import * as taskService from './task.service';
+import { AppError } from '../error/error.model';
+import { AuthenticatedRequest } from '../middlewares/auth.middleware';
+import { FilterCriteria, Task } from './task.model';
 
-export const analyse = async (req: AuthenticatedRequest, res: Response) => {
+export const createTask = async (req: AuthenticatedRequest, res: Response) => {
 
-  try {
+    try {
 
-    if (!req.body || !req.body.text) throw new AppError(400, 'Text is not present.');
-    if (!req.user) throw new AppError(401, 'User is not authenticated.');
+        if (!req.body) throw new AppError(400, 'Task is not present.');
+        if (!req.user || !req.user.id) throw new AppError(401, 'User is not identified.');
 
-    const text = req.body.text;
-    const user = req.user;
+        const task = req.body as Task;
+        const userId = req.user.id;
 
-    const task = await analyseText(req.user.id, text);
-    console.log('response:', task);
-    return res.json(task);
+        const newTask = await taskService.createTask(userId, task);
+        const message: string = `Task '${newTask.title}' created successfully.`;
+        return res.status(201).json({ message, result: newTask });
 
-  } catch (error) {
-    console.error('Error analysing text:', error);
+    } catch (error) {
+        console.error('Error creating task:', error);
 
-    if (error instanceof AppError) {
-      const appError = (error as AppError);
-      res.statusMessage = appError.message;
-      return res.status(appError.statusCode).json(appError);
+        if (error instanceof AppError) {
+            const appError = (error as AppError);
+            res.statusMessage = appError.message;
+            return res.status(appError.statusCode).json(appError);
+        }
+
+        return res.status(500).json(error);
     }
+}
 
-    return res.status(500).json(error);
-  }
-};
+export const updateTask = async (req: AuthenticatedRequest, res: Response) => {
+
+    try {
+
+        if (!req.body) throw new AppError(400, 'Task is not present.');
+        if (!req.user || !req.user.id) throw new AppError(401, 'User is not identified.');
+
+        const task = req.body as Task;
+        const userId = req.user.id;
+
+        const updatedTask = await taskService.updateTask(userId, task);
+
+        const message: string = `Task '${updatedTask.title}' updated successfully.`;
+        return res.status(200).json({ message, result: updatedTask });
+
+    } catch (error) {
+        console.error('Error updating task:', error);
+
+        if (error instanceof AppError) {
+            const appError = (error as AppError);
+            res.statusMessage = appError.message;
+            return res.status(appError.statusCode).json(appError);
+        }
+
+        return res.status(500).json(error);
+    }
+}
+
+export const listTasks = async (req: AuthenticatedRequest, res: Response) => {
+
+    try {
+
+        if (!req.query) throw new AppError(400, 'Criteria filter is not present.');
+        if (!req.user || !req.user.id) throw new AppError(401, 'User is not identified.');
+
+        const criteria = req.query as Partial<FilterCriteria>;
+        const userId = req.user.id;
+
+        const tasks = await taskService.retrieveTasks(userId, criteria);
+
+        const message: string = (!tasks || tasks.length > 0) ?
+            `Found ${tasks.length} task(s).` :
+            `No tasks found.`
+
+        return res.status(200).json({ message, result: tasks });
+
+    } catch (error) {
+        console.error('Error creating task:', error);
+
+        if (error instanceof AppError) {
+            const appError = (error as AppError);
+            res.statusMessage = appError.message;
+            return res.status(appError.statusCode).json(appError);
+        }
+
+        return res.status(500).json(error);
+    }
+}
+
+export const deleteTask = async (req: AuthenticatedRequest, res: Response) => {
+
+    try {
+
+        if (!req.query || !req.query.taskId) throw new AppError(400, 'TaskId is not present.');
+        if (!req.user || !req.user.id) throw new AppError(401, 'User is not identified.');
+
+        const taskId = req.query.taskId as string;
+        const userId = req.user.id;
+
+        await taskService.deleteTask(userId, taskId);
+
+        const message: string = `Task ${taskId} was deleted.`;
+        return res.status(200).json({ message, result: {} });
+
+    } catch (error) {
+        console.error('Error creating task:', error);
+
+        if (error instanceof AppError) {
+            const appError = (error as AppError);
+            res.statusMessage = appError.message;
+            return res.status(appError.statusCode).json(appError);
+        }
+
+        return res.status(500).json(error);
+    }
+}

@@ -1,6 +1,6 @@
-import { AppError } from '../error/error.model.js';
-import { IUser, PublicUser, UserDTO } from '../user/user.model.js';
-import { createDB, findOne, saveRefreshTokenDB } from '../user/user.repository.js';
+import { AppError } from '../error/error.model';
+import { IUser, PublicUser } from '../user/user.model';
+import { createDB, findOne, saveRefreshTokenDB } from '../user/user.repository';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -44,11 +44,11 @@ export async function processLogin(user: IUser): Promise<{ publicUser: PublicUse
     return { publicUser, accessToken, refreshToken };
 }
 
-function saveRefreshToken(userId: string, refreshToken: string) {
+async function saveRefreshToken(userId: string, refreshToken: string) {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-    const tokenSaved = saveRefreshTokenDB(userId, refreshToken, expiresAt);
-    if (!tokenSaved) throw new AppError(500, "Failed to save refresh token");
+    const isSaved = await saveRefreshTokenDB(userId, refreshToken, expiresAt);
+    if (!isSaved) throw new AppError(500, "Failed to save refresh token");
 }
 
 export async function processRefreshToken(refreshToken: string): Promise<{ newAccessToken: string, newRefreshToken: string }> {
@@ -88,14 +88,20 @@ const generateRefreshToken = (payload: PublicUser) => {
 };
 
 async function validateRefreshToken(token: string): Promise<PublicUser> {
-    const payload = jwt.verify(token, REFRESH_SECRET);
+    
+    let payload = null;
+    try{
+        payload = jwt.verify(token, REFRESH_SECRET);
+    } catch (err) {
+        throw new AppError(403, 'Invalid refresh token');
+    }
 
     if (payload && typeof payload !== 'object')
         throw new AppError(403, 'Invalid refresh token');
 
     const stored = await findOne({ email: (payload as PublicUser).email });
 
-    if (!stored || !stored.expiresAt || stored.expiresAt < new Date())
+    if (!stored || stored.refreshToken !== token || !stored.expiresAt || stored.expiresAt < new Date())
         throw new AppError(403, 'Invalid refresh token');
 
     return stored.toPublicJSON() as PublicUser;

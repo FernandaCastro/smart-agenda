@@ -1,6 +1,6 @@
-import { AppError } from "../error/error.model.js";
-import { IUser, UserDTO } from "./user.model.js";
-import UserModel from "./user.mongoose.js";
+import { AppError } from "../error/error.model";
+import { IUser, UserDTO } from "./user.model";
+import UserModel from "./user.mongoose";
 
 
 export const findOne = async (criteria: Partial<UserDTO>): Promise<UserDTO|null> => {

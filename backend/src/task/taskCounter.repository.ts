@@ -1,4 +1,4 @@
-import TaskCounter from "./taskCounter.mongoose.js";
+import TaskCounter from "./taskCounter.mongoose";
 
 // generate taskId as T-0001
 export async function generateTaskId(userId: string): Promise<string> {
@@ -9,5 +9,6 @@ export async function generateTaskId(userId: string): Promise<string> {
     );
 
     const idNum = counter.lastTaskId;
-    return `T-${String(idNum).padStart(4, "0")}`;
+    return `T-${String(idNum)}`;
+
 }
